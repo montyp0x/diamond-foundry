@@ -215,7 +215,7 @@ library TestHelpers {
     /// @return d The DesiredState with all discovered facets
     function createDesiredStateFromExample(string memory name, string memory namespace)
         internal
-        pure
+        view
         returns (DesiredFacetsIO.DesiredState memory d)
     {
         return FacetDiscovery.discoverExampleFacets(name, namespace);

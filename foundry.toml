@@ -5,7 +5,8 @@ libs = ["lib"]
 
 fs_permissions = [
   { access = "read",       path = "out" },
-  { access = "read-write", path = ".diamond-upgrades" }
+  { access = "read-write", path = ".diamond-upgrades" },
+  { access = "read",       path = "src" }
 ]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
