@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Vm} from "forge-std/Vm.sol";
 
 /// @title JsonUtils
 /// @notice This library was previously used for JSON formatting utilities.

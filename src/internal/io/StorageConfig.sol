@@ -13,7 +13,7 @@ import {HexUtils} from "../utils/HexUtils.sol";
 library StorageConfigIO {
     using stdJson for string;
 
-    Vm internal constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
+    Vm internal constant VM = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
     enum NamespaceStatus { Active, Deprecated, Replaced }
 
@@ -38,7 +38,7 @@ library StorageConfigIO {
     function load(string memory name) internal view returns (StorageConfig memory cfg) {
         string memory path = Paths.storageJson(name);
         string memory raw;
-        try vm.readFile(path) returns (string memory data) { raw = data; }
+        try VM.readFile(path) returns (string memory data) { raw = data; }
         catch { revert Errors.StorageConfigNotFound(name); }
 
         cfg.name = raw.readString(".name");
@@ -76,12 +76,15 @@ library StorageConfigIO {
             "}"
         );
 
-        vm.writeFile(path, json);
+        VM.writeFile(path, json);
     }
 
     // ── Lookup helpers ──────────────────────────────────────────────────────────
     function find(StorageConfig memory cfg, string memory nsId) internal pure returns (bool, uint256) {
-        bytes32 k = keccak256(bytes(nsId));
+        bytes32 k;
+        assembly {
+            k := keccak256(add(nsId, 0x20), mload(nsId))
+        }
         for (uint256 i = 0; i < cfg.namespaces.length; i++) {
             if (keccak256(bytes(cfg.namespaces[i].namespaceId)) == k) return (true, i);
         }

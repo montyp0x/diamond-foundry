@@ -1,21 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import "forge-std/Test.sol";
-import "forge-std/console.sol";
+import {Test} from "forge-std/Test.sol";
+import {console} from "forge-std/console.sol";
 
 // Library entrypoints
 import {DiamondUpgrades} from "src/DiamondUpgrades.sol";
 
 // IO + sync helpers
 import {DesiredFacetsIO} from "src/internal/io/DesiredFacets.sol";
-import {StorageConfigIO} from "src/internal/io/StorageConfig.sol";
 import {StorageInit} from "src/internal/sync/StorageInit.sol";
 import {FacetSync} from "src/internal/sync/FacetSync.sol";
 import {ManifestIO} from "src/internal/io/Manifest.sol";
-import {Paths} from "src/internal/utils/Paths.sol";
 import {TestHelpers} from "test/utils/TestHelpers.sol";
-import {Errors} from "src/errors/Errors.sol";
 
 // Example interfaces & storage
 import {IAddFacet} from "src/example/interfaces/counter/IAddFacet.sol";

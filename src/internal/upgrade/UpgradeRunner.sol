@@ -133,7 +133,10 @@ library UpgradeRunner {
     /// @notice Check if the desired state already has an explicit loupe facet defined.
     function _hasExplicitLoupeFacet(DesiredFacetsIO.DesiredState memory desired) private pure returns (bool) {
         string memory loupeArtifact = "DiamondLoupeFacet.sol:DiamondLoupeFacet";
-        bytes32 key = keccak256(bytes(loupeArtifact));
+        bytes32 key;
+        assembly {
+            key := keccak256(add(loupeArtifact, 0x20), mload(loupeArtifact))
+        }
         for (uint256 i = 0; i < desired.facets.length; i++) {
             if (keccak256(bytes(desired.facets[i].artifact)) == key) {
                 return true;

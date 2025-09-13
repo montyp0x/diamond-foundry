@@ -10,8 +10,6 @@ pragma solidity ^0.8.0;
 
 import { LibDiamond } from "./libraries/diamond/LibDiamond.sol";
 import { IDiamondCut } from "./interfaces/diamond/IDiamondCut.sol";
-import { IDiamondLoupe } from  "./interfaces/diamond/IDiamondLoupe.sol";
-import { IERC173 } from "./interfaces/diamond/IERC173.sol";
 //import { IERC165} from "./interfaces/diamond/IERC165.sol";
 
 // When no function exists for function called

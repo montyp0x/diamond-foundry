@@ -13,7 +13,7 @@ import {HexUtils} from "../utils/HexUtils.sol";
 library ManifestIO {
     using stdJson for string;
 
-    Vm internal constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
+    Vm internal constant VM = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
     struct SelectorSnapshot { bytes4 selector; address facet; }
     struct FacetSnapshot { string artifact; address facet; bytes32 runtimeBytecodeHash; bytes4[] selectors; }
@@ -43,7 +43,7 @@ library ManifestIO {
     function load(string memory name) internal view returns (Manifest memory m) {
         string memory path = Paths.manifestJson(name);
         string memory raw;
-        try vm.readFile(path) returns (string memory data) { raw = data; }
+        try VM.readFile(path) returns (string memory data) { raw = data; }
         catch { revert Errors.ManifestNotFound(name, block.chainid); }
 
         m.name = raw.readString(".name");
@@ -53,7 +53,7 @@ library ManifestIO {
         for (uint256 i = 0; ; i++) {
             string memory chainBase = string.concat(".chains[", StringUtils.toString(i), "]");
             uint256 chainId;
-            try vm.parseJsonUint(raw, string.concat(chainBase, ".chainId")) returns (uint256 cId) {
+            try VM.parseJsonUint(raw, string.concat(chainBase, ".chainId")) returns (uint256 cId) {
                 chainId = cId;
             } catch {
                 break; // No more chains
@@ -73,9 +73,9 @@ library ManifestIO {
             string memory sb = string.concat(base, ".selectors[", StringUtils.toString(i2), "]");
             bytes32 sel32;
             address facet;
-            try vm.parseJsonBytes32(raw, string.concat(sb, ".selector")) returns (bytes32 s32) {
+            try VM.parseJsonBytes32(raw, string.concat(sb, ".selector")) returns (bytes32 s32) {
                 sel32 = s32;
-                facet = vm.parseJsonAddress(raw, string.concat(sb, ".facet"));
+                facet = VM.parseJsonAddress(raw, string.concat(sb, ".facet"));
             } catch {
                 break; // No more selectors
             }
@@ -88,10 +88,10 @@ library ManifestIO {
         for (uint256 f = 0; ; f++) {
             string memory fb = string.concat(base, ".facets[", StringUtils.toString(f), "]");
             FacetSnapshot memory fs;
-            try vm.parseJsonString(raw, string.concat(fb, ".artifact")) returns (string memory artifact) {
+            try VM.parseJsonString(raw, string.concat(fb, ".artifact")) returns (string memory artifact) {
                 fs.artifact = artifact;
-                fs.facet = vm.parseJsonAddress(raw, string.concat(fb, ".facet"));
-                fs.runtimeBytecodeHash = vm.parseJsonBytes32(raw, string.concat(fb, ".runtimeBytecodeHash"));
+                fs.facet = VM.parseJsonAddress(raw, string.concat(fb, ".facet"));
+                fs.runtimeBytecodeHash = VM.parseJsonBytes32(raw, string.concat(fb, ".runtimeBytecodeHash"));
             } catch {
                 break; // No more facets
             }
@@ -100,7 +100,7 @@ library ManifestIO {
             bytes4[] memory fsSelectors = new bytes4[](0);
             for (uint256 j = 0; ; j++) {
                 bytes32 b32;
-                try vm.parseJsonBytes32(raw, string.concat(fb, ".selectors[", StringUtils.toString(j), "]")) returns (bytes32 sel32) {
+                try VM.parseJsonBytes32(raw, string.concat(fb, ".selectors[", StringUtils.toString(j), "]")) returns (bytes32 sel32) {
                     b32 = sel32;
                 } catch {
                     break; // No more selectors
@@ -118,9 +118,9 @@ library ManifestIO {
             string memory cb = string.concat(base, ".bytecodeCache[", StringUtils.toString(c), "]");
             bytes32 hash;
             address facet;
-            try vm.parseJsonBytes32(raw, string.concat(cb, ".hash")) returns (bytes32 h) {
+            try VM.parseJsonBytes32(raw, string.concat(cb, ".hash")) returns (bytes32 h) {
                 hash = h;
-                facet = vm.parseJsonAddress(raw, string.concat(cb, ".facet"));
+                facet = VM.parseJsonAddress(raw, string.concat(cb, ".facet"));
             } catch {
                 break; // No more entries
             }
@@ -133,12 +133,12 @@ library ManifestIO {
         for (uint256 n = 0; ; n++) {
             string memory nb = string.concat(base, ".namespaces[", StringUtils.toString(n), "]");
             NamespaceState memory ns;
-            try vm.parseJsonString(raw, string.concat(nb, ".namespaceId")) returns (string memory nsId) {
+            try VM.parseJsonString(raw, string.concat(nb, ".namespaceId")) returns (string memory nsId) {
                 ns.namespaceId = nsId;
-                ns.layoutHash = vm.parseJsonBytes32(raw, string.concat(nb, ".layoutHash"));
-                ns.fieldsCount = vm.parseJsonUint(raw, string.concat(nb, ".fieldsCount"));
-                ns.status = NamespaceStatus(vm.parseJsonUint(raw, string.concat(nb, ".status")));
-                ns.supersededBy = vm.parseJsonString(raw, string.concat(nb, ".supersededBy"));
+                ns.layoutHash = VM.parseJsonBytes32(raw, string.concat(nb, ".layoutHash"));
+                ns.fieldsCount = VM.parseJsonUint(raw, string.concat(nb, ".fieldsCount"));
+                ns.status = NamespaceStatus(VM.parseJsonUint(raw, string.concat(nb, ".status")));
+                ns.supersededBy = VM.parseJsonString(raw, string.concat(nb, ".supersededBy"));
             } catch {
                 break; // No more namespaces
             }
@@ -151,12 +151,12 @@ library ManifestIO {
         for (uint256 h = 0; ; h++) {
             string memory hb = string.concat(base, ".history[", StringUtils.toString(h), "]");
             HistoryEntry memory he;
-            try vm.parseJsonBytes32(raw, string.concat(hb, ".txHash")) returns (bytes32 txHash) {
+            try VM.parseJsonBytes32(raw, string.concat(hb, ".txHash")) returns (bytes32 txHash) {
                 he.txHash = txHash;
-                he.timestamp = vm.parseJsonUint(raw, string.concat(hb, ".timestamp"));
-                he.addCount = vm.parseJsonUint(raw, string.concat(hb, ".addCount"));
-                he.replaceCount = vm.parseJsonUint(raw, string.concat(hb, ".replaceCount"));
-                he.removeCount = vm.parseJsonUint(raw, string.concat(hb, ".removeCount"));
+                he.timestamp = VM.parseJsonUint(raw, string.concat(hb, ".timestamp"));
+                he.addCount = VM.parseJsonUint(raw, string.concat(hb, ".addCount"));
+                he.replaceCount = VM.parseJsonUint(raw, string.concat(hb, ".replaceCount"));
+                he.removeCount = VM.parseJsonUint(raw, string.concat(hb, ".removeCount"));
             } catch {
                 break; // No more history entries
             }
@@ -182,7 +182,7 @@ library ManifestIO {
         );
 
         // Note: Используем light pretty formatting для избежания OOG на больших манифестах
-        vm.writeFile(path, json);
+        VM.writeFile(path, json);
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -191,7 +191,10 @@ library ManifestIO {
         return address(0);
     }
     function findFacetByArtifact(ChainState memory s, string memory artifact) internal pure returns (bool, uint256) {
-        bytes32 k = keccak256(bytes(artifact));
+        bytes32 k;
+        assembly {
+            k := keccak256(add(artifact, 0x20), mload(artifact))
+        }
         for (uint256 i = 0; i < s.facets.length; i++) if (keccak256(bytes(s.facets[i].artifact)) == k) return (true, i);
         return (false, 0);
     }
@@ -200,7 +203,10 @@ library ManifestIO {
         return address(0);
     }
     function findNamespace(ChainState memory s, string memory nsId) internal pure returns (bool, uint256) {
-        bytes32 k = keccak256(bytes(nsId));
+        bytes32 k;
+        assembly {
+            k := keccak256(add(nsId, 0x20), mload(nsId))
+        }
         for (uint256 i = 0; i < s.namespaces.length; i++) if (keccak256(bytes(s.namespaces[i].namespaceId)) == k) return (true, i);
         return (false, 0);
     }
@@ -225,7 +231,11 @@ library ManifestIO {
                 keccak256(bytes(s.namespaces[n].supersededBy))
             );
         }
-        return keccak256(acc);
+        bytes32 result;
+        assembly {
+            result := keccak256(add(acc, 0x20), mload(acc))
+        }
+        return result;
     }
 
     // JSON building (compact version)
@@ -233,13 +243,13 @@ library ManifestIO {
         return string.concat(
             "{\n",
             "      \"chainId\": ", StringUtils.toString(s.chainId), ",\n",
-            "      \"diamond\": \"", vm.toString(s.diamond), "\",\n",
+            "      \"diamond\": \"", VM.toString(s.diamond), "\",\n",
             "      \"selectors\": ", _selectorsJson(s.selectors), ",\n",
             "      \"facets\": ", _facetsJson(s.facets), ",\n",
             "      \"bytecodeCache\": ", _cacheJson(s.bytecodeCache), ",\n",
             "      \"namespaces\": ", _namespacesJson(s.namespaces), ",\n",
             "      \"history\": ", _historyJson(s.history), ",\n",
-            "      \"stateHash\": \"", vm.toString(s.stateHash), "\"\n",
+            "      \"stateHash\": \"", VM.toString(s.stateHash), "\"\n",
             "    }"
         );
     }
@@ -251,8 +261,8 @@ library ManifestIO {
             out = string.concat(
                 out,
                 "        {",
-                "\"selector\":\"", vm.toString(bytes32(arr[i].selector)), "\",",
-                "\"facet\":\"", vm.toString(arr[i].facet), "\"",
+                "\"selector\":\"", VM.toString(bytes32(arr[i].selector)), "\",",
+                "\"facet\":\"", VM.toString(arr[i].facet), "\"",
                 "}",
                 i + 1 == arr.length ? "\n" : ",\n"
             );
@@ -268,8 +278,8 @@ library ManifestIO {
                 out,
                 "        {",
                 "\"artifact\":\"", arr[i].artifact, "\",",
-                "\"facet\":\"", vm.toString(arr[i].facet), "\",",
-                "\"runtimeBytecodeHash\":\"", vm.toString(arr[i].runtimeBytecodeHash), "\",",
+                "\"facet\":\"", VM.toString(arr[i].facet), "\",",
+                "\"runtimeBytecodeHash\":\"", VM.toString(arr[i].runtimeBytecodeHash), "\",",
                 "\"selectors\":", _bytes4ArrayJson(arr[i].selectors),
                 "}",
                 i + 1 == arr.length ? "\n" : ",\n"
@@ -285,8 +295,8 @@ library ManifestIO {
             out = string.concat(
                 out,
                 "        {",
-                "\"hash\":\"", vm.toString(arr[i].hash), "\",",
-                "\"facet\":\"", vm.toString(arr[i].facet), "\"",
+                "\"hash\":\"", VM.toString(arr[i].hash), "\",",
+                "\"facet\":\"", VM.toString(arr[i].facet), "\"",
                 "}",
                 i + 1 == arr.length ? "\n" : ",\n"
             );
@@ -336,7 +346,7 @@ library ManifestIO {
         if (arr.length == 0) return "[]";
         string memory out = "[";
         for (uint256 i = 0; i < arr.length; i++) {
-            out = string.concat(out, "\"", vm.toString(bytes32(arr[i])), "\"", i + 1 == arr.length ? "" : ",");
+            out = string.concat(out, "\"", VM.toString(bytes32(arr[i])), "\"", i + 1 == arr.length ? "" : ",");
         }
         return string.concat(out, "]");
     }

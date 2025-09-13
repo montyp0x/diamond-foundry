@@ -13,7 +13,7 @@ import {Errors} from "../../errors/Errors.sol";
 /// @dev Requires Foundry cheatcodes (works in scripts/tests). No on-chain reads.
 library FacetDeployer {
     // canonical handle to Foundry's Vm
-    Vm internal constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
+    Vm internal constant VM = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
     /// @notice Result of resolution (and optional deployment).
     struct Result {
@@ -40,16 +40,19 @@ library FacetDeployer {
             string memory artifact = desired.facets[i].artifact;
 
             // 1) load runtime bytecode from artifact (compiled output) with basename fallback
-            bytes memory runtime = vm.getCode(artifact);
+            bytes memory runtime = VM.getCode(artifact);
             if (runtime.length == 0) {
                 string memory base = _basename(artifact);
                 if (!_eq(base, artifact)) {
-                    runtime = vm.getCode(base);
+                    runtime = VM.getCode(base);
                 }
             }
             if (runtime.length == 0) revert Errors.RuntimeBytecodeEmpty(artifact);
 
-            bytes32 rhash = keccak256(runtime);
+            bytes32 rhash;
+            assembly {
+                rhash := keccak256(add(runtime, 0x20), mload(runtime))
+            }
             r.runtimeHashes[i] = rhash;
 
             // 2) try resolve from manifest cache
@@ -58,11 +61,11 @@ library FacetDeployer {
             // 3) if not cached and allowed, deploy now
             if (facet == address(0) && deploy) {
                 // NB: facets should not have constructors; if they do, use the overloaded deployCode with args.
-                facet = vm.deployCode(artifact);
+                facet = VM.deployCode(artifact);
                 if (facet == address(0)) {
                     string memory base = _basename(artifact);
                     if (!_eq(base, artifact)) {
-                        facet = vm.deployCode(base);
+                        facet = VM.deployCode(base);
                     }
                 }
                 if (facet == address(0)) revert Errors.InvalidArtifact(artifact);

@@ -10,7 +10,7 @@ import {StorageConfigIO} from "../io/StorageConfig.sol";
 /// @dev Uses Foundry cheatcodes directly; call from a forge script before deploying.
 library StorageInit {
     // Foundry Vm handle
-    Vm internal constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
+    Vm internal constant VM = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
     /// @notice Minimal seed describing a namespace you want to ensure exists in storage.json.
     /// @dev `slot` is derived as keccak256(namespaceId) to keep convention stable.
@@ -68,7 +68,7 @@ library StorageInit {
 
     function _fileExists(string memory path) private view returns (bool) {
         // vm.readFile reverts if not found; probe via try/catch
-        try vm.readFile(path) returns (string memory /*data*/) {
+        try VM.readFile(path) returns (string memory /*data*/) {
             return true;
         } catch {
             return false;

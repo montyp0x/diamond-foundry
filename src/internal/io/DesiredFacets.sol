@@ -14,7 +14,7 @@ import {HexUtils} from "../utils/HexUtils.sol";
 library DesiredFacetsIO {
     using stdJson for string;
 
-    Vm internal constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
+    Vm internal constant VM = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
     struct InitSpec { address target; bytes data; }
     struct Facet { string artifact; bytes4[] selectors; string[] uses; }
@@ -28,7 +28,7 @@ library DesiredFacetsIO {
     function load(string memory name) internal view returns (DesiredState memory d) {
         string memory path = Paths.facetsJson(name);
         string memory raw;
-        try vm.readFile(path) returns (string memory data) { raw = data; }
+        try VM.readFile(path) returns (string memory data) { raw = data; }
         catch { revert Errors.DesiredFacetsNotFound(name); }
 
         d.name = name;
@@ -64,7 +64,7 @@ library DesiredFacetsIO {
             "{\n",
             "  \"name\": \"", d.name, "\",\n",
             "  \"init\": {\n",
-            "    \"target\": \"", vm.toString(d.init.target), "\",\n",
+            "    \"target\": \"", VM.toString(d.init.target), "\",\n",
             "    \"data\": \"", HexUtils.toHexString(d.init.data), "\"\n",
             "  },\n",
             "  \"facetsCount\": ", StringUtils.toString(d.facets.length), ",\n",
@@ -73,8 +73,8 @@ library DesiredFacetsIO {
         );
 
         // Overwrite atomically to avoid stale trailing bytes in prior file contents
-        try vm.removeFile(path) {} catch {}
-        vm.writeFile(path, json);
+        try VM.removeFile(path) {} catch {}
+        VM.writeFile(path, json);
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────────────
@@ -92,7 +92,10 @@ library DesiredFacetsIO {
     }
 
     function findFacet(DesiredState memory d, string memory artifact) internal pure returns (bool found, uint256 index) {
-        bytes32 key = keccak256(bytes(artifact));
+        bytes32 key;
+        assembly {
+            key := keccak256(add(artifact, 0x20), mload(artifact))
+        }
         for (uint256 i = 0; i < d.facets.length; i++) {
             if (keccak256(bytes(d.facets[i].artifact)) == key) return (true, i);
         }
@@ -126,7 +129,7 @@ library DesiredFacetsIO {
         for (uint256 i = 0; i < arr.length; i++) {
             out = string.concat(
                 out,
-                "        \"", vm.toString(bytes32(arr[i])), "\"",
+                "        \"", VM.toString(bytes32(arr[i])), "\"",
                 i + 1 == arr.length ? "\n" : ",\n"
             );
         }

@@ -6,14 +6,14 @@ import {IDiamondLoupe} from "../../interfaces/diamond/IDiamondLoupe.sol";
 import {IERC173} from "../../interfaces/diamond/IERC173.sol";
 import {IDiamondCut} from "../../interfaces/diamond/IDiamondCut.sol";
 import {IDiamond} from "../../interfaces/diamond/IDiamond.sol";
-import {Diamond, DiamondArgs} from "../../Diamond.sol";
+import {DiamondArgs} from "../../Diamond.sol";
 
 /// @title DiamondDeployer
 /// @notice Deploys the core Diamond and provides helpers for standard facets (Cut/Loupe/Ownership).
 /// @dev Relies on Foundry cheatcodes (scripts/tests). Artifact ids must match this repo layout.
 library DiamondDeployer {
     // Foundry Vm handle
-    Vm internal constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
+    Vm internal constant VM = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
     // Artifacts in this library (adjust if your layout changes)
     string internal constant ARTIFACT_DIAMOND            = "Diamond.sol:Diamond";
@@ -32,9 +32,9 @@ library DiamondDeployer {
     /// @notice Deploy all core facets (Cut, Ownership, Loupe) and Diamond with the standard EIP-2535 constructor.
     function deployCore(address owner) internal returns (Core memory c) {
         // 1) Deploy all core facets
-        address cut = vm.deployCode(ARTIFACT_DIAMOND_CUT_FACET);
-        address ownership = vm.deployCode(ARTIFACT_OWNERSHIP_FACET);
-        address loupe = vm.deployCode(ARTIFACT_DIAMOND_LOUPE);
+        address cut = VM.deployCode(ARTIFACT_DIAMOND_CUT_FACET);
+        address ownership = VM.deployCode(ARTIFACT_OWNERSHIP_FACET);
+        address loupe = VM.deployCode(ARTIFACT_DIAMOND_LOUPE);
 
         // 2) Prepare FacetCuts for all core facets (they need to be added during deployment)
         IDiamond.FacetCut[] memory diamondCut = new IDiamond.FacetCut[](3);
@@ -73,7 +73,7 @@ library DiamondDeployer {
 
         // 4) Deploy Diamond with proper EIP-2535 constructor
         bytes memory ctor = abi.encode(diamondCut, args);
-        address diamond = vm.deployCode(ARTIFACT_DIAMOND, ctor);
+        address diamond = VM.deployCode(ARTIFACT_DIAMOND, ctor);
 
         c.diamond = diamond;
         c.cutFacet = cut;
@@ -83,7 +83,7 @@ library DiamondDeployer {
 
     /// @notice Deploy the loupe facet (no constructors assumed).
     function deployLoupeFacet() internal returns (address loupe) {
-        loupe = vm.deployCode(ARTIFACT_DIAMOND_LOUPE);
+        loupe = VM.deployCode(ARTIFACT_DIAMOND_LOUPE);
     }
 
     /// @notice Canonical selectors for the IDiamondLoupe interface.

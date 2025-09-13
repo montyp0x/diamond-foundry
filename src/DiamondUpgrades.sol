@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {Errors} from "./errors/Errors.sol";
 import {IDiamondCut} from "./interfaces/diamond/IDiamondCut.sol";
 import {IDiamondLoupe} from "./interfaces/diamond/IDiamondLoupe.sol";
 

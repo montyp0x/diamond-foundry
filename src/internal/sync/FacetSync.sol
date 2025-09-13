@@ -9,7 +9,7 @@ import {StringUtils} from "../utils/StringUtils.sol";
 /// @notice Sync desired facets' selectors from compiled artifact ABIs in `out/`.
 /// @dev Без `.length` в путях JSON: итерация по индексам через try/catch на Vm.parseJsonString.
 library FacetSync {
-    Vm internal constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
+    Vm internal constant VM = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
     /// @notice Recompute selectors for every facet in `.diamond-upgrades/<name>.facets.json` from ABI.
     function syncSelectors(string memory name) internal {
@@ -21,7 +21,7 @@ library FacetSync {
             string memory jsonPath = string.concat("out/", fileSol, "/", contractName, ".json"); // e.g. out/AddFacet.sol/AddFacet.json
 
             // read artifact JSON
-            string memory raw = vm.readFile(jsonPath);
+            string memory raw = VM.readFile(jsonPath);
 
             // walk ABI entries and compute selectors for every "function"
             bytes4[] memory sels = _selectorsFromAbi(raw);
@@ -45,7 +45,7 @@ library FacetSync {
             string memory base = string.concat(".abi[", StringUtils.toString(i), "]");
             string memory typ;
             // stop when no abi[i]
-            try vm.parseJsonString(raw, string.concat(base, ".type")) returns (string memory t) {
+            try VM.parseJsonString(raw, string.concat(base, ".type")) returns (string memory t) {
                 typ = t;
             } catch {
                 break;
@@ -53,7 +53,7 @@ library FacetSync {
 
             if (_eq(typ, "function")) {
                 // name
-                string memory fname = vm.parseJsonString(raw, string.concat(base, ".name"));
+                string memory fname = VM.parseJsonString(raw, string.concat(base, ".name"));
 
                 // inputs: iterate inputs[j] until it stops existing
                 string memory sig = string.concat(fname, "(");
@@ -61,7 +61,7 @@ library FacetSync {
                 for (uint256 j = 0; ; j++) {
                     string memory ip = string.concat(base, ".inputs[", StringUtils.toString(j), "].type");
                     string memory tIn;
-                    try vm.parseJsonString(raw, ip) returns (string memory t) {
+                    try VM.parseJsonString(raw, ip) returns (string memory t) {
                         tIn = t;
                     } catch {
                         break;
@@ -98,13 +98,13 @@ library FacetSync {
         for (uint256 j = 0; j < R.length; j++) R[j] = b[p + 1 + j];
 
         // normalize left to basename: ".../AddFacet.sol" -> "AddFacet.sol"
-        bytes memory LB = L;
+        bytes memory lb = L;
         int256 lastSlash = -1;
-        for (uint256 k = 0; k < LB.length; k++) if (LB[k] == "/") lastSlash = int256(k);
+        for (uint256 k = 0; k < lb.length; k++) if (lb[k] == "/") lastSlash = int256(k);
         if (lastSlash >= 0) {
             uint256 start = uint256(lastSlash) + 1;
-            bytes memory base = new bytes(LB.length - start);
-            for (uint256 t = 0; t < base.length; t++) base[t] = LB[start + t];
+            bytes memory base = new bytes(lb.length - start);
+            for (uint256 t = 0; t < base.length; t++) base[t] = lb[start + t];
             leftFile = string(base);
         } else {
             leftFile = string(L);

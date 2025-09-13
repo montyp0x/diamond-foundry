@@ -87,7 +87,10 @@ library ManifestApply {
     }
 
     function _resolve(CutPlanner.FacetAddr[] memory targets, string memory artifact) private pure returns (address) {
-        bytes32 key = keccak256(bytes(artifact));
+        bytes32 key;
+        assembly {
+            key := keccak256(add(artifact, 0x20), mload(artifact))
+        }
         for (uint256 i = 0; i < targets.length; i++) {
             if (keccak256(bytes(targets[i].artifact)) == key) {
                 return targets[i].facet;

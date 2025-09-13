@@ -16,7 +16,7 @@
       "bytecodeCache": [
         {"hash":"0x805484040c30fdb4c7cffdbb78dc10dd6ef419c3e20cb3edd422f518be07961a","facet":"0xc7183455a4C133Ae270771860664b6B7ec320bB1"},
         {"hash":"0x5010e835acabfcbb7dc89ef3c5b73b6a5b8ed6b35d27ff0d1dcf85cc2b621072","facet":"0xa0Cb889707d426A7A386870A03bc70d1b0697598"},
-        {"hash":"0xc2a9d00d45edfeaa916e08357afd572159b203c0c32294734dc2986a85fdf04b","facet":"0x1d1499e622D69689cdf9004d05Ec547d650Ff211"}
+        {"hash":"0x20ba546cc5d7d4de7ff186c37010cca8442a72da2077ffa1b7378eda3e16d597","facet":"0x1d1499e622D69689cdf9004d05Ec547d650Ff211"}
       ],
       "namespaces": [
         {"namespaceId":"counter.v1","layoutHash":"0x0000000000000000000000000000000000000000000000000000000000000000","fieldsCount":0,"status":0,"supersededBy":""}
@@ -26,7 +26,7 @@
         {"txHash":"0x0000000000000000000000000000000000000000000000000000000000000000","timestamp":1,"addCount":1,"replaceCount":0,"removeCount":0},
         {"txHash":"0x0000000000000000000000000000000000000000000000000000000000000000","timestamp":1,"addCount":0,"replaceCount":0,"removeCount":1}
       ],
-      "stateHash": "0xf46cfeeaad87107b58b1d3dbf6e4eed5b5d532cd1a626bf9b9ae1871df70bc39"
+      "stateHash": "0x4dd78ae5b73689b0cf445550a5d30ccd166d6618c7dfe00bdc490893431b5636"
     }
   ]
 }
