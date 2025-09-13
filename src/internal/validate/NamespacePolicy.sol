@@ -11,8 +11,8 @@ import {StorageConfigIO} from "../io/StorageConfig.sol";
 library NamespacePolicy {
     /// @notice Validation options.
     struct Options {
-        bool strictUses;       // if true, every facet must declare non-empty `uses` (for mutating facets)
-        bool allowDualWrite;   // if false, using a Replaced namespace is forbidden
+        bool strictUses; // if true, every facet must declare non-empty `uses` (for mutating facets)
+        bool allowDualWrite; // if false, using a Replaced namespace is forbidden
     }
 
     /// @notice Validate desired facets against storage config.

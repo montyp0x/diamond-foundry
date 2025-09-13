@@ -10,17 +10,17 @@ library StringUtils {
     /// @return Decimal string representation of the number.
     function toString(uint256 v) internal pure returns (string memory) {
         if (v == 0) return "0";
-        uint256 t = v; 
+        uint256 t = v;
         uint256 d;
-        while (t != 0) { 
-            d++; 
-            t /= 10; 
+        while (t != 0) {
+            d++;
+            t /= 10;
         }
         bytes memory buf = new bytes(d);
-        while (v != 0) { 
-            d--; 
-            buf[d] = bytes1(uint8(48 + (v % 10))); 
-            v /= 10; 
+        while (v != 0) {
+            d--;
+            buf[d] = bytes1(uint8(48 + (v % 10)));
+            v /= 10;
         }
         return string(buf);
     }

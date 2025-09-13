@@ -41,5 +41,4 @@ library Errors {
     // ─────────────────────────────────────────────────────────────────────────────
     error RuntimeBytecodeEmpty(string artifact);
     error InvalidArtifact(string artifact);
-
 }

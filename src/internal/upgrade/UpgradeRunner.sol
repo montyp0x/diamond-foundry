@@ -19,9 +19,9 @@ import {InitUtils} from "./InitUtils.sol";
 library UpgradeRunner {
     /// @notice Minimal options affecting validation behavior.
     struct Options {
-        bool allowRemoveCore;   // allow touching core selectors
-        bool strictUses;        // require `uses` for facets (typically for mutating facets)
-        bool allowDualWrite;    // allow v1+v2 namespaces to co-exist temporarily
+        bool allowRemoveCore; // allow touching core selectors
+        bool strictUses; // require `uses` for facets (typically for mutating facets)
+        bool allowDualWrite; // allow v1+v2 namespaces to co-exist temporarily
     }
 
     /// @notice Result of an upgrade run (useful for scripts/tests).
@@ -49,29 +49,21 @@ library UpgradeRunner {
 
         // 2) Validate `uses` ↔ storage namespaces policy (pure checks)
         // Use storage configuration's allowDualWrite to enforce migration policy regardless of caller opts
-        NamespacePolicy.Options memory nsOpts = NamespacePolicy.Options({
-            strictUses: opts.strictUses,
-            allowDualWrite: storageCfg.allowDualWrite
-        });
+        NamespacePolicy.Options memory nsOpts =
+            NamespacePolicy.Options({strictUses: opts.strictUses, allowDualWrite: storageCfg.allowDualWrite});
         NamespacePolicy.validate(desired, storageCfg, nsOpts);
 
         // 3) Resolve facet targets by runtime hash; deploy missing ones if needed
         FacetDeployer.Result memory res = FacetDeployer.resolveTargets(
             desired,
             manifest.state,
-            /*deploy=*/ true
+            /*deploy=*/
+            true
         );
 
         // 4) Build a grouped cut plan (manifest-only diff)
-        PlanBuilder.Options memory pbOpts = PlanBuilder.Options({
-            allowRemoveCore: opts.allowRemoveCore
-        });
-        PlanBuilder.Plan memory planGrouped = PlanBuilder.build(
-            manifest.state,
-            desired,
-            res.targets,
-            pbOpts
-        );
+        PlanBuilder.Options memory pbOpts = PlanBuilder.Options({allowRemoveCore: opts.allowRemoveCore});
+        PlanBuilder.Plan memory planGrouped = PlanBuilder.build(manifest.state, desired, res.targets, pbOpts);
 
         // If no changes, return early (NoOp)
         if (planGrouped.cuts.length == 0) {
@@ -91,12 +83,8 @@ library UpgradeRunner {
         PlanExecutor.execute(r.diamond, planGrouped.cuts, initPair.target, initPair.data);
 
         // 7) Rebuild the manifest snapshot after successful cut (selectors/facets/cache/stateHash)
-        ManifestIO.ChainState memory nextState = ManifestApply.rebuildAfterUpgrade(
-            manifest.state,
-            desired,
-            res.targets,
-            res.runtimeHashes
-        );
+        ManifestIO.ChainState memory nextState =
+            ManifestApply.rebuildAfterUpgrade(manifest.state, desired, res.targets, res.runtimeHashes);
 
         // 8) Write result fields
         r.addCount = planGrouped.addCount;
@@ -125,7 +113,7 @@ library UpgradeRunner {
     function _getLoupeSelectors() private pure returns (bytes4[] memory sel) {
         sel = new bytes4[](4);
         sel[0] = 0x7a0ed627; // IDiamondLoupe.facets.selector
-        sel[1] = 0xadfca15e; // IDiamondLoupe.facetFunctionSelectors.selector  
+        sel[1] = 0xadfca15e; // IDiamondLoupe.facetFunctionSelectors.selector
         sel[2] = 0x52ef6b2c; // IDiamondLoupe.facetAddresses.selector
         sel[3] = 0xcdffacc6; // IDiamondLoupe.facetAddress.selector
     }

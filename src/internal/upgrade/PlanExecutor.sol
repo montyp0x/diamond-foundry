@@ -13,12 +13,9 @@ library PlanExecutor {
     /// @param cuts Grouped facet cuts (Add/Replace/Remove).
     /// @param init Optional initializer target (0 if none).
     /// @param initCalldata Optional initializer calldata (empty if none).
-    function execute(
-        address diamond,
-        IDiamondCut.FacetCut[] memory cuts,
-        address init,
-        bytes memory initCalldata
-    ) internal {
+    function execute(address diamond, IDiamondCut.FacetCut[] memory cuts, address init, bytes memory initCalldata)
+        internal
+    {
         // Basic sanity for init pairing
         if ((init == address(0)) != (initCalldata.length == 0)) {
             // Either target without data or data without target

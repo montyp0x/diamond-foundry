@@ -17,8 +17,8 @@ library FacetDeployer {
 
     /// @notice Result of resolution (and optional deployment).
     struct Result {
-        CutPlanner.FacetAddr[] targets;  // artifact → facet address (address(0) if unresolved and deploy=false)
-        bytes32[] runtimeHashes;         // keccak256(runtime bytecode) per desired facet (same index)
+        CutPlanner.FacetAddr[] targets; // artifact → facet address (address(0) if unresolved and deploy=false)
+        bytes32[] runtimeHashes; // keccak256(runtime bytecode) per desired facet (same index)
     }
 
     /// @notice Resolve target facet addresses for all desired artifacts.
@@ -79,22 +79,35 @@ library FacetDeployer {
         bytes memory b = bytes(artifact);
         // split on ':' first
         uint256 colon = b.length;
-        for (uint256 i = 0; i < b.length; i++) { if (b[i] == ":") { colon = i; break; } }
+        for (uint256 i = 0; i < b.length; i++) {
+            if (b[i] == ":") {
+                colon = i;
+                break;
+            }
+        }
         if (colon == b.length) return artifact; // malformed, return as-is
         // left part
         bytes memory L = new bytes(colon);
-        for (uint256 i2 = 0; i2 < colon; i2++) L[i2] = b[i2];
+        for (uint256 i2 = 0; i2 < colon; i2++) {
+            L[i2] = b[i2];
+        }
         // right part
         bytes memory R = new bytes(b.length - colon - 1);
-        for (uint256 j = 0; j < R.length; j++) R[j] = b[colon + 1 + j];
+        for (uint256 j = 0; j < R.length; j++) {
+            R[j] = b[colon + 1 + j];
+        }
 
         // find last '/'
         int256 lastSlash = -1;
-        for (uint256 k = 0; k < L.length; k++) { if (L[k] == "/") lastSlash = int256(k); }
+        for (uint256 k = 0; k < L.length; k++) {
+            if (L[k] == "/") lastSlash = int256(k);
+        }
         if (lastSlash < 0) return artifact; // nothing to trim
         uint256 start = uint256(lastSlash) + 1;
         bytes memory baseL = new bytes(L.length - start);
-        for (uint256 t = 0; t < baseL.length; t++) baseL[t] = L[start + t];
+        for (uint256 t = 0; t < baseL.length; t++) {
+            baseL[t] = L[start + t];
+        }
         return string(abi.encodePacked(string(baseL), ":", string(R)));
     }
 

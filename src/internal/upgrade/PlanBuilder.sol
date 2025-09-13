@@ -20,7 +20,7 @@ library PlanBuilder {
 
     /// @notice Final grouped plan ready to pass into `diamondCut`.
     struct Plan {
-        IDiamondCut.FacetCut[] cuts;  // grouped by (facet, action), remove uses facet=address(0)
+        IDiamondCut.FacetCut[] cuts; // grouped by (facet, action), remove uses facet=address(0)
         uint256 addCount;
         uint256 replaceCount;
         uint256 removeCount;
@@ -51,11 +51,8 @@ library PlanBuilder {
         SelectorCheck.ensureNoCollisions(fin);
 
         // 2) Compute selector-level diff ops (Add/Replace/Remove) vs manifest snapshot.
-        (CutPlanner.SelectorOp[] memory ops, uint256 opCount) = CutPlanner.diff(
-            _toCurrent(current),
-            _toDesired(desired),
-            targets
-        );
+        (CutPlanner.SelectorOp[] memory ops, uint256 opCount) =
+            CutPlanner.diff(_toCurrent(current), _toDesired(desired), targets);
         if (opCount == 0) {
             // Leave p.cuts empty; caller may treat as NoOp.
             return p;
@@ -91,11 +88,7 @@ library PlanBuilder {
         }
     }
 
-    function _toCurrent(ManifestIO.ChainState memory s)
-        private
-        pure
-        returns (CutPlanner.Current[] memory out)
-    {
+    function _toCurrent(ManifestIO.ChainState memory s) private pure returns (CutPlanner.Current[] memory out) {
         out = new CutPlanner.Current[](s.selectors.length);
         for (uint256 i = 0; i < s.selectors.length; i++) {
             out[i].selector = s.selectors[i].selector;
@@ -103,11 +96,7 @@ library PlanBuilder {
         }
     }
 
-    function _toDesired(DesiredFacetsIO.DesiredState memory d)
-        private
-        pure
-        returns (CutPlanner.Desired[] memory out)
-    {
+    function _toDesired(DesiredFacetsIO.DesiredState memory d) private pure returns (CutPlanner.Desired[] memory out) {
         out = new CutPlanner.Desired[](d.facets.length);
         for (uint256 i = 0; i < d.facets.length; i++) {
             out[i].artifact = d.facets[i].artifact;

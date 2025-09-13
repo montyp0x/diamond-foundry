@@ -14,17 +14,17 @@ library LayoutCheck {
     /// @notice Minimal field descriptor extracted from Solidity's storageLayout.
     /// @dev `typeId` should uniquely identify the field type (e.g., compiler "type" string).
     struct Field {
-        string typeId;      // e.g. "t_uint256", "t_mapping(t_address,t_uint256)", etc.
-        uint256 slot;       // absolute storage slot index
-        uint256 offset;     // byte offset within the slot (0..31)
-        // NOTE: If you need more strictness later, you can extend with `bytes32 labelHash`, `bytes32 typeHash`, etc.
+        string typeId; // e.g. "t_uint256", "t_mapping(t_address,t_uint256)", etc.
+        uint256 slot; // absolute storage slot index
+        uint256 offset; // byte offset within the slot (0..31)
+            // NOTE: If you need more strictness later, you can extend with `bytes32 labelHash`, `bytes32 typeHash`, etc.
     }
 
     /// @notice Per-namespace input for an append-only check.
     struct NamespaceInput {
         string namespaceId; // e.g. "uniswap.v2"
-        Field[] oldLayout;  // accepted layout (from manifest)
-        Field[] newLayout;  // candidate layout (from current build)
+        Field[] oldLayout; // accepted layout (from manifest)
+        Field[] newLayout; // candidate layout (from current build)
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
@@ -43,10 +43,7 @@ library LayoutCheck {
         bytes memory acc;
         // Pack as: keccak256(abi.encode(typeId, slot, offset)) per field, then hash the concatenation.
         for (uint256 i = 0; i < layout_.length; i++) {
-            acc = abi.encodePacked(
-                acc,
-                keccak256(abi.encode(layout_[i].typeId, layout_[i].slot, layout_[i].offset))
-            );
+            acc = abi.encodePacked(acc, keccak256(abi.encode(layout_[i].typeId, layout_[i].slot, layout_[i].offset)));
         }
         h = keccak256(acc);
     }
@@ -84,11 +81,7 @@ library LayoutCheck {
     // Internals
     // ─────────────────────────────────────────────────────────────────────────────
 
-    function _ensureAppendOnly(
-        string memory ns,
-        Field[] memory oldLayout,
-        Field[] memory newLayout
-    ) private pure {
+    function _ensureAppendOnly(string memory ns, Field[] memory oldLayout, Field[] memory newLayout) private pure {
         if (newLayout.length < oldLayout.length) {
             revert Errors.StorageLayoutIncompatible(ns, "new layout is shorter than old layout");
         }
@@ -123,7 +116,10 @@ library LayoutCheck {
         if (v == 0) return "0";
         uint256 temp = v;
         uint256 digits;
-        while (temp != 0) { digits++; temp /= 10; }
+        while (temp != 0) {
+            digits++;
+            temp /= 10;
+        }
         bytes memory buffer = new bytes(digits);
         while (v != 0) {
             digits -= 1;

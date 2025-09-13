@@ -18,8 +18,8 @@ library SelectorCheck {
 
     /// @notice Thin struct describing a facet's desired selector set.
     struct FacetInput {
-        string artifact;      // e.g. "src/.../MyFacet.sol:MyFacet"
-        bytes4[] selectors;   // desired selectors for that facet
+        string artifact; // e.g. "src/.../MyFacet.sol:MyFacet"
+        bytes4[] selectors; // desired selectors for that facet
     }
 
     /// @notice Ensure there are no duplicate selectors across desired facets.
@@ -61,11 +61,9 @@ library SelectorCheck {
     /// @notice Returns true if `selector` is one of the guarded core selectors.
     function isCoreSelector(bytes4 selector) internal pure returns (bool) {
         return (
-            selector == SELECTOR_DIAMOND_CUT ||
-            selector == SELECTOR_LOUPE_FACETS ||
-            selector == SELECTOR_LOUPE_FACET_FUNCTION_SELECTORS ||
-            selector == SELECTOR_LOUPE_FACET_ADDRESSES ||
-            selector == SELECTOR_LOUPE_FACET_ADDRESS
+            selector == SELECTOR_DIAMOND_CUT || selector == SELECTOR_LOUPE_FACETS
+                || selector == SELECTOR_LOUPE_FACET_FUNCTION_SELECTORS || selector == SELECTOR_LOUPE_FACET_ADDRESSES
+                || selector == SELECTOR_LOUPE_FACET_ADDRESS
         );
     }
 

@@ -22,22 +22,22 @@ library CutPlanner {
 
     /// @notice Desired facet declaration (from facets.json).
     struct Desired {
-        string artifact;     // "src/.../MyFacet.sol:MyFacet"
-        bytes4[] selectors;  // desired selectors routed to this facet
+        string artifact; // "src/.../MyFacet.sol:MyFacet"
+        bytes4[] selectors; // desired selectors routed to this facet
     }
 
     /// @notice (Optional) known facet addresses resolved per artifact (hash→address cache).
     struct FacetAddr {
         string artifact;
-        address facet;       // address(0) => needs deploy / not resolved yet
+        address facet; // address(0) => needs deploy / not resolved yet
     }
 
     /// @notice One selector-level diff op.
     struct SelectorOp {
         IDiamondCut.FacetCutAction action; // Add / Replace / Remove
         bytes4 selector;
-        string artifact;                   // for Add/Replace: target facet artifact name
-        address fromFacet;                 // for Replace/Remove: currently owned facet (if any)
+        string artifact; // for Add/Replace: target facet artifact name
+        address fromFacet; // for Replace/Remove: currently owned facet (if any)
     }
 
     /// @notice Grouped plan ready for diamondCut.
@@ -54,11 +54,11 @@ library CutPlanner {
 
     /// @notice Build selector-level diff ops between current and desired.
     /// @dev `targets` is used to decide if something is a Replace vs no-op (when address is known).
-    function diff(
-        Current[] memory current,
-        Desired[] memory desired,
-        FacetAddr[] memory targets
-    ) internal pure returns (SelectorOp[] memory ops, uint256 opCount) {
+    function diff(Current[] memory current, Desired[] memory desired, FacetAddr[] memory targets)
+        internal
+        pure
+        returns (SelectorOp[] memory ops, uint256 opCount)
+    {
         // Upper bound: all desired selectors could be Add/Replace + all current could be Remove.
         uint256 desiredTotal = _desiredSelectorCount(desired);
         ops = new SelectorOp[](desiredTotal + current.length);
@@ -111,7 +111,9 @@ library CutPlanner {
         }
 
         // Trim the ops array to opCount.
-        assembly { mstore(ops, opCount) }
+        assembly {
+            mstore(ops, opCount)
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
@@ -120,10 +122,7 @@ library CutPlanner {
 
     /// @notice Group selector-level ops into FacetCut batches (one per facet/action).
     /// @dev For Remove, the facetAddress must be address(0) as per EIP-2535 spec.
-    function group(
-        SelectorOp[] memory ops,
-        FacetAddr[] memory targets
-    ) internal pure returns (Grouped memory g) {
+    function group(SelectorOp[] memory ops, FacetAddr[] memory targets) internal pure returns (Grouped memory g) {
         // Count buckets first to size arrays deterministically.
         // We’ll group by (facetAddress, action). For Remove, facetAddress = address(0).
         // Simplicity over micro-optimizations: two passes with O(n^2) small scans.
@@ -214,7 +213,11 @@ library CutPlanner {
         return address(0);
     }
 
-    function _groupKey(SelectorOp memory op, FacetAddr[] memory targets) private pure returns (address facet, uint8 action) {
+    function _groupKey(SelectorOp memory op, FacetAddr[] memory targets)
+        private
+        pure
+        returns (address facet, uint8 action)
+    {
         action = uint8(op.action);
         if (op.action == IDiamond.FacetCutAction.Remove) {
             facet = address(0);

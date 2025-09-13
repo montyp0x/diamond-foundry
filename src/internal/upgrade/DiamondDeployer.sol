@@ -16,10 +16,10 @@ library DiamondDeployer {
     Vm internal constant VM = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
     // Artifacts in this library (adjust if your layout changes)
-    string internal constant ARTIFACT_DIAMOND            = "Diamond.sol:Diamond";
-    string internal constant ARTIFACT_DIAMOND_CUT_FACET  = "DiamondCutFacet.sol:DiamondCutFacet";
-    string internal constant ARTIFACT_DIAMOND_LOUPE      = "DiamondLoupeFacet.sol:DiamondLoupeFacet";
-    string internal constant ARTIFACT_OWNERSHIP_FACET    = "OwnershipFacet.sol:OwnershipFacet";
+    string internal constant ARTIFACT_DIAMOND = "Diamond.sol:Diamond";
+    string internal constant ARTIFACT_DIAMOND_CUT_FACET = "DiamondCutFacet.sol:DiamondCutFacet";
+    string internal constant ARTIFACT_DIAMOND_LOUPE = "DiamondLoupeFacet.sol:DiamondLoupeFacet";
+    string internal constant ARTIFACT_OWNERSHIP_FACET = "OwnershipFacet.sol:OwnershipFacet";
 
     /// @notice Deployed core component addresses.
     struct Core {
@@ -38,16 +38,13 @@ library DiamondDeployer {
 
         // 2) Prepare FacetCuts for all core facets (they need to be added during deployment)
         IDiamond.FacetCut[] memory diamondCut = new IDiamond.FacetCut[](3);
-        
+
         // DiamondCutFacet
         bytes4[] memory cutSelectors = new bytes4[](1);
         cutSelectors[0] = IDiamondCut.diamondCut.selector;
-        diamondCut[0] = IDiamond.FacetCut({
-            facetAddress: cut,
-            action: IDiamond.FacetCutAction.Add,
-            functionSelectors: cutSelectors
-        });
-        
+        diamondCut[0] =
+            IDiamond.FacetCut({facetAddress: cut, action: IDiamond.FacetCutAction.Add, functionSelectors: cutSelectors});
+
         // OwnershipFacet
         bytes4[] memory ownerSelectors = ownershipSelectors();
         diamondCut[1] = IDiamond.FacetCut({
@@ -55,21 +52,14 @@ library DiamondDeployer {
             action: IDiamond.FacetCutAction.Add,
             functionSelectors: ownerSelectors
         });
-        
+
         // DiamondLoupeFacet
         bytes4[] memory loupeSels = loupeSelectors();
-        diamondCut[2] = IDiamond.FacetCut({
-            facetAddress: loupe,
-            action: IDiamond.FacetCutAction.Add,
-            functionSelectors: loupeSels
-        });
+        diamondCut[2] =
+            IDiamond.FacetCut({facetAddress: loupe, action: IDiamond.FacetCutAction.Add, functionSelectors: loupeSels});
 
         // 3) Prepare Diamond constructor arguments
-        DiamondArgs memory args = DiamondArgs({
-            owner: owner,
-            init: address(0),
-            initCalldata: ""
-        });
+        DiamondArgs memory args = DiamondArgs({owner: owner, init: address(0), initCalldata: ""});
 
         // 4) Deploy Diamond with proper EIP-2535 constructor
         bytes memory ctor = abi.encode(diamondCut, args);
@@ -111,5 +101,4 @@ library DiamondDeployer {
     function ownershipArtifact() internal pure returns (string memory) {
         return ARTIFACT_OWNERSHIP_FACET;
     }
-
 }

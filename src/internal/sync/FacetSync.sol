@@ -41,7 +41,7 @@ library FacetSync {
         bytes4[] memory acc = new bytes4[](0);
 
         // iterate abi[i]
-        for (uint256 i = 0; ; i++) {
+        for (uint256 i = 0;; i++) {
             string memory base = string.concat(".abi[", StringUtils.toString(i), "]");
             string memory typ;
             // stop when no abi[i]
@@ -58,7 +58,7 @@ library FacetSync {
                 // inputs: iterate inputs[j] until it stops existing
                 string memory sig = string.concat(fname, "(");
                 bool first = true;
-                for (uint256 j = 0; ; j++) {
+                for (uint256 j = 0;; j++) {
                     string memory ip = string.concat(base, ".inputs[", StringUtils.toString(j), "].type");
                     string memory tIn;
                     try VM.parseJsonString(raw, ip) returns (string memory t) {
@@ -85,26 +85,41 @@ library FacetSync {
     // ─────────────────────────────────────────────────────────────────────────────
 
     /// @dev Accepts "AddFacet.sol:AddFacet" or "src/.../AddFacet.sol:AddFacet" and returns ("AddFacet.sol","AddFacet").
-    function _splitArtifact(string memory artifact) private pure returns (string memory leftFile, string memory rightName) {
+    function _splitArtifact(string memory artifact)
+        private
+        pure
+        returns (string memory leftFile, string memory rightName)
+    {
         bytes memory b = bytes(artifact);
         uint256 p = b.length;
         for (uint256 i = 0; i < b.length; i++) {
-            if (b[i] == ":") { p = i; break; }
+            if (b[i] == ":") {
+                p = i;
+                break;
+            }
         }
         require(p != b.length && p > 0, "FacetSync: bad artifact");
         bytes memory L = new bytes(p);
-        for (uint256 i2 = 0; i2 < p; i2++) L[i2] = b[i2];
+        for (uint256 i2 = 0; i2 < p; i2++) {
+            L[i2] = b[i2];
+        }
         bytes memory R = new bytes(b.length - p - 1);
-        for (uint256 j = 0; j < R.length; j++) R[j] = b[p + 1 + j];
+        for (uint256 j = 0; j < R.length; j++) {
+            R[j] = b[p + 1 + j];
+        }
 
         // normalize left to basename: ".../AddFacet.sol" -> "AddFacet.sol"
         bytes memory lb = L;
         int256 lastSlash = -1;
-        for (uint256 k = 0; k < lb.length; k++) if (lb[k] == "/") lastSlash = int256(k);
+        for (uint256 k = 0; k < lb.length; k++) {
+            if (lb[k] == "/") lastSlash = int256(k);
+        }
         if (lastSlash >= 0) {
             uint256 start = uint256(lastSlash) + 1;
             bytes memory base = new bytes(lb.length - start);
-            for (uint256 t = 0; t < base.length; t++) base[t] = lb[start + t];
+            for (uint256 t = 0; t < base.length; t++) {
+                base[t] = lb[start + t];
+            }
             leftFile = string(base);
         } else {
             leftFile = string(L);
@@ -119,7 +134,9 @@ library FacetSync {
     function _append(bytes4[] memory arr, bytes4 v) private pure returns (bytes4[] memory out) {
         uint256 n = arr.length;
         out = new bytes4[](n + 1);
-        for (uint256 i = 0; i < n; i++) out[i] = arr[i];
+        for (uint256 i = 0; i < n; i++) {
+            out[i] = arr[i];
+        }
         out[n] = v;
     }
 
@@ -130,13 +147,19 @@ library FacetSync {
         for (uint256 i = 0; i < arr.length; i++) {
             bytes4 s = arr[i];
             bool seen = false;
-            for (uint256 j = 0; j < w; j++) { if (tmp[j] == s) { seen = true; break; } }
+            for (uint256 j = 0; j < w; j++) {
+                if (tmp[j] == s) {
+                    seen = true;
+                    break;
+                }
+            }
             if (!seen) tmp[w++] = s;
         }
         out = new bytes4[](w);
-        for (uint256 k = 0; k < w; k++) out[k] = tmp[k];
+        for (uint256 k = 0; k < w; k++) {
+            out[k] = tmp[k];
+        }
     }
-
 
     function _eq(string memory a, string memory b) private pure returns (bool) {
         return keccak256(bytes(a)) == keccak256(bytes(b));

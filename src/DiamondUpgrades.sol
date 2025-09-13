@@ -81,17 +81,15 @@ library DiamondUpgrades {
     bytes4 internal constant SELECTOR_LOUPE_FACET_ADDRESSES = IDiamondLoupe.facetAddresses.selector;
     bytes4 internal constant SELECTOR_LOUPE_FACET_ADDRESS = IDiamondLoupe.facetAddress.selector;
 
-
     // ─────────────────────────────────────────────────────────────────────────────
     // Public API
     // ─────────────────────────────────────────────────────────────────────────────
 
-        /// @notice Deploy a fresh Diamond using the library-owned core and add desired facets.
-    function deployDiamond(
-        string memory name,
-        DeployOpts memory deploy,
-        InitSpec memory initOverride
-    ) internal returns (address diamond) {
+    /// @notice Deploy a fresh Diamond using the library-owned core and add desired facets.
+    function deployDiamond(string memory name, DeployOpts memory deploy, InitSpec memory initOverride)
+        internal
+        returns (address diamond)
+    {
         // 1) Prepare desiredPlus + initPair and validate `uses`
         DesiredFacetsIO.DesiredState memory desiredPlus;
         InitUtils.InitPair memory initPair;
@@ -101,10 +99,8 @@ library DiamondUpgrades {
             DesiredFacetsIO.DesiredState memory desiredTmp = DesiredFacetsIO.load(name);
             StorageConfigIO.StorageConfig memory storageCfg = StorageConfigIO.load(name);
 
-            NamespacePolicy.Options memory nsOpts = NamespacePolicy.Options({
-                strictUses: false,
-                allowDualWrite: storageCfg.allowDualWrite
-            });
+            NamespacePolicy.Options memory nsOpts =
+                NamespacePolicy.Options({strictUses: false, allowDualWrite: storageCfg.allowDualWrite});
             NamespacePolicy.validate(desiredTmp, storageCfg, nsOpts);
 
             desiredPlus.name = desiredTmp.name;
@@ -131,38 +127,31 @@ library DiamondUpgrades {
 
         // 3) Current (empty) chain slice
         ManifestIO.ChainState memory current;
-        current.chainId      = block.chainid;
-        current.diamond      = diamond;
-        current.selectors    = new ManifestIO.SelectorSnapshot[](0);
-        current.facets       = new ManifestIO.FacetSnapshot[](0);
-        current.bytecodeCache= new ManifestIO.BytecodeCacheEntry[](0);
-        current.namespaces   = new ManifestIO.NamespaceState[](0);
-        current.history      = new ManifestIO.HistoryEntry[](0);
-        current.stateHash    = bytes32(0);
+        current.chainId = block.chainid;
+        current.diamond = diamond;
+        current.selectors = new ManifestIO.SelectorSnapshot[](0);
+        current.facets = new ManifestIO.FacetSnapshot[](0);
+        current.bytecodeCache = new ManifestIO.BytecodeCacheEntry[](0);
+        current.namespaces = new ManifestIO.NamespaceState[](0);
+        current.history = new ManifestIO.HistoryEntry[](0);
+        current.stateHash = bytes32(0);
 
         // 4) Resolve targets (deploy facets) → plan → execute
         FacetDeployer.Result memory res = FacetDeployer.resolveTargets(
             desiredPlus,
             current,
-            /*deploy=*/ true
+            /*deploy=*/
+            true
         );
 
-        PlanBuilder.Plan memory gp = PlanBuilder.build(
-            current,
-            desiredPlus,
-            res.targets,
-            PlanBuilder.Options({allowRemoveCore: false})
-        );
+        PlanBuilder.Plan memory gp =
+            PlanBuilder.build(current, desiredPlus, res.targets, PlanBuilder.Options({allowRemoveCore: false}));
 
         PlanExecutor.execute(diamond, gp.cuts, initPair.target, initPair.data);
 
         // 5) Rebuild manifest slice and persist
-        ManifestIO.ChainState memory nextState = ManifestApply.rebuildAfterUpgrade(
-            current,
-            desiredPlus,
-            res.targets,
-            res.runtimeHashes
-        );
+        ManifestIO.ChainState memory nextState =
+            ManifestApply.rebuildAfterUpgrade(current, desiredPlus, res.targets, res.runtimeHashes);
 
         // Copy storage namespaces snapshot from storage.json into manifest (status-only snapshot)
         {
@@ -203,14 +192,10 @@ library DiamondUpgrades {
         emit Deployed(name, diamond);
     }
 
-
     /// @notice High-level upgrade using the manifest-only pipeline; persists the new manifest.
     function upgrade(string memory name) internal returns (address diamond) {
-        UpgradeRunner.Options memory opts = UpgradeRunner.Options({
-            allowRemoveCore: false,
-            strictUses: false,
-            allowDualWrite: false
-        });
+        UpgradeRunner.Options memory opts =
+            UpgradeRunner.Options({allowRemoveCore: false, strictUses: false, allowDualWrite: false});
 
         UpgradeRunner.Result memory r = UpgradeRunner.run(name, opts);
         diamond = r.diamond;
@@ -241,7 +226,9 @@ library DiamondUpgrades {
         });
         uint256 oldLen = r.manifestNext.state.history.length;
         ManifestIO.HistoryEntry[] memory newHist = new ManifestIO.HistoryEntry[](oldLen + 1);
-        for (uint256 i = 0; i < oldLen; i++) newHist[i] = r.manifestNext.state.history[i];
+        for (uint256 i = 0; i < oldLen; i++) {
+            newHist[i] = r.manifestNext.state.history[i];
+        }
         newHist[oldLen] = he;
         r.manifestNext.state.history = newHist;
         r.manifestNext.state.stateHash = ManifestIO.computeStateHash(r.manifestNext.state);
@@ -273,12 +260,7 @@ library DiamondUpgrades {
     }
 
     /// @notice Execute an explicit cut plan (advanced usage).
-    function executeCut(
-        address diamond,
-        PlanOp[] memory ops,
-        address init,
-        bytes memory initCalldata
-    ) internal {
+    function executeCut(address diamond, PlanOp[] memory ops, address init, bytes memory initCalldata) internal {
         IDiamondCut.FacetCut[] memory cuts = _toFacetCuts(ops);
         PlanExecutor.execute(diamond, cuts, init, initCalldata);
     }

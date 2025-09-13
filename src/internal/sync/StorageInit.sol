@@ -15,10 +15,10 @@ library StorageInit {
     /// @notice Minimal seed describing a namespace you want to ensure exists in storage.json.
     /// @dev `slot` is derived as keccak256(namespaceId) to keep convention stable.
     struct NamespaceSeed {
-        string namespaceId;       // e.g., "counter.v1"
-        uint64 version;           // e.g., 1
-        string artifact;          // optional: "src/.../LibCounterStorage.sol:LibCounterStorage"
-        string libraryName;       // optional: "LibCounterStorage"
+        string namespaceId; // e.g., "counter.v1"
+        uint64 version; // e.g., 1
+        string artifact; // optional: "src/.../LibCounterStorage.sol:LibCounterStorage"
+        string libraryName; // optional: "LibCounterStorage"
     }
 
     /// @notice Ensure storage config exists and contains the given namespaces.
@@ -26,12 +26,9 @@ library StorageInit {
     /// @param seeds Namespaces to ensure; existing ones are left untouched.
     /// @param appendOnlyPolicy Global policy flag (recommended: true).
     /// @param allowDualWrite Allow temporary v1+v2 coexistence (usually false unless migrating).
-    function ensure(
-        string memory name,
-        NamespaceSeed[] memory seeds,
-        bool appendOnlyPolicy,
-        bool allowDualWrite
-    ) internal {
+    function ensure(string memory name, NamespaceSeed[] memory seeds, bool appendOnlyPolicy, bool allowDualWrite)
+        internal
+    {
         string memory path = Paths.storageJson(name);
 
         // Load if exists; otherwise start a fresh config.
@@ -53,7 +50,7 @@ library StorageInit {
         // For each seed, add if missing (do not overwrite existing entries).
         for (uint256 i = 0; i < seeds.length; i++) {
             StorageConfigIO.NamespaceConfig memory ns = _toNamespaceConfig(seeds[i]);
-            (bool ok, ) = StorageConfigIO.find(cfg, ns.namespaceId);
+            (bool ok,) = StorageConfigIO.find(cfg, ns.namespaceId);
             if (!ok) {
                 cfg.namespaces = _appendNamespace(cfg.namespaces, ns);
             }
@@ -68,14 +65,18 @@ library StorageInit {
 
     function _fileExists(string memory path) private view returns (bool) {
         // vm.readFile reverts if not found; probe via try/catch
-        try VM.readFile(path) returns (string memory /*data*/) {
+        try VM.readFile(path) returns (string memory /*data*/ ) {
             return true;
         } catch {
             return false;
         }
     }
 
-    function _toNamespaceConfig(NamespaceSeed memory s) private pure returns (StorageConfigIO.NamespaceConfig memory ns) {
+    function _toNamespaceConfig(NamespaceSeed memory s)
+        private
+        pure
+        returns (StorageConfigIO.NamespaceConfig memory ns)
+    {
         ns.namespaceId = s.namespaceId;
         ns.slot = keccak256(bytes(s.namespaceId)); // deterministic slot from namespaceId
         ns.version = s.version == 0 ? 1 : s.version;
@@ -85,12 +86,15 @@ library StorageInit {
         ns.libraryName = s.libraryName;
     }
 
-    function _appendNamespace(
-        StorageConfigIO.NamespaceConfig[] memory arr,
-        StorageConfigIO.NamespaceConfig memory ns
-    ) private pure returns (StorageConfigIO.NamespaceConfig[] memory out) {
+    function _appendNamespace(StorageConfigIO.NamespaceConfig[] memory arr, StorageConfigIO.NamespaceConfig memory ns)
+        private
+        pure
+        returns (StorageConfigIO.NamespaceConfig[] memory out)
+    {
         out = new StorageConfigIO.NamespaceConfig[](arr.length + 1);
-        for (uint256 i = 0; i < arr.length; i++) out[i] = arr[i];
+        for (uint256 i = 0; i < arr.length; i++) {
+            out[i] = arr[i];
+        }
         out[arr.length] = ns;
     }
 }

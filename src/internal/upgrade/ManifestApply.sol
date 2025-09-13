@@ -36,10 +36,8 @@ library ManifestApply {
             require(facetAddr != address(0), "ManifestApply: unresolved facet address");
 
             for (uint256 j = 0; j < desired.facets[i].selectors.length; j++) {
-                next.selectors[w++] = ManifestIO.SelectorSnapshot({
-                    selector: desired.facets[i].selectors[j],
-                    facet: facetAddr
-                });
+                next.selectors[w++] =
+                    ManifestIO.SelectorSnapshot({selector: desired.facets[i].selectors[j], facet: facetAddr});
             }
         }
 
@@ -134,7 +132,9 @@ library ManifestApply {
         }
 
         // If we allocated more than we filled (shouldn't happen), trim
-        assembly { mstore(out, w) }
+        assembly {
+            mstore(out, w)
+        }
     }
 
     function _cacheLookup(ManifestIO.ChainState memory s, bytes32 h) private pure returns (address) {

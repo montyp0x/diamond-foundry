@@ -45,21 +45,30 @@ library SelectorLib {
             bytes4 s = arr[i];
             bool seen = false;
             for (uint256 j = 0; j < w; j++) {
-                if (tmp[j] == s) { seen = true; break; }
+                if (tmp[j] == s) {
+                    seen = true;
+                    break;
+                }
             }
             if (!seen) tmp[w++] = s;
         }
 
         out = new bytes4[](w);
-        for (uint256 k = 0; k < w; k++) out[k] = tmp[k];
+        for (uint256 k = 0; k < w; k++) {
+            out[k] = tmp[k];
+        }
     }
 
     /// @notice Concatenate two selector arrays.
     function concat(bytes4[] memory a, bytes4[] memory b) internal pure returns (bytes4[] memory out) {
         out = new bytes4[](a.length + b.length);
         uint256 w = 0;
-        for (uint256 i = 0; i < a.length; i++) out[w++] = a[i];
-        for (uint256 j = 0; j < b.length; j++) out[w++] = b[j];
+        for (uint256 i = 0; i < a.length; i++) {
+            out[w++] = a[i];
+        }
+        for (uint256 j = 0; j < b.length; j++) {
+            out[w++] = b[j];
+        }
     }
 
     /// @notice Filter selectors by excluding any that appear in `exclude`.
@@ -71,6 +80,8 @@ library SelectorLib {
             if (!contains(excludeArr, src[i])) tmp[w++] = src[i];
         }
         out = new bytes4[](w);
-        for (uint256 k = 0; k < w; k++) out[k] = tmp[k];
+        for (uint256 k = 0; k < w; k++) {
+            out[k] = tmp[k];
+        }
     }
 }

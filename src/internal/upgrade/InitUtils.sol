@@ -11,7 +11,7 @@ library InitUtils {
     /// @notice Canonical initializer pair.
     struct InitPair {
         address target; // 0 means "no init"
-        bytes data;     // empty means "no init"
+        bytes data; // empty means "no init"
     }
 
     /// @notice Ensure the (target,data) pair is either fully present or fully absent.
@@ -31,7 +31,11 @@ library InitUtils {
 
     /// @notice Merge desired init with an explicit override; override wins when present.
     /// @dev If `overridePair` is empty (both zero), returns the desired one.
-    function merge(InitPair memory desiredPair, InitPair memory overridePair) internal pure returns (InitPair memory out) {
+    function merge(InitPair memory desiredPair, InitPair memory overridePair)
+        internal
+        pure
+        returns (InitPair memory out)
+    {
         assertPaired(desiredPair);
         assertPaired(overridePair);
 
