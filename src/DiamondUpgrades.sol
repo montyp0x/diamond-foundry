@@ -20,7 +20,7 @@ import {FacetDeployer} from "./internal/upgrade/FacetDeployer.sol";
 import {ManifestApply} from "./internal/upgrade/ManifestApply.sol";
 import {InitUtils} from "./internal/upgrade/InitUtils.sol";
 import {DiamondDeployer} from "./internal/upgrade/DiamondDeployer.sol";
-import {FacetDiscovery} from "./internal/utils/FacetDiscovery.sol";
+import {FacetSync} from "./internal/sync/FacetSync.sol";
 
 /// @title DiamondUpgrades (manifest-only)
 /// @notice Public entrypoints for deploying and upgrading Diamonds using a manifest-driven flow.
@@ -96,6 +96,9 @@ library DiamondUpgrades {
     {
         // 0) Ensure .diamond-upgrades directory exists for good UX
         _ensureDiamondUpgradesDir(name);
+
+        // 0.5) Auto-discover facets and sync selectors if needed
+        FacetSync.syncSelectors(name);
 
         // 1) Prepare desiredPlus + initPair and validate `uses`
         DesiredFacetsIO.DesiredState memory desiredPlus;
@@ -203,6 +206,9 @@ library DiamondUpgrades {
     function upgrade(string memory name) internal returns (address diamond) {
         // Ensure .diamond-upgrades directory exists for good UX
         _ensureDiamondUpgradesDir(name);
+
+        // Auto-discover facets and sync selectors if needed
+        FacetSync.syncSelectors(name);
 
         UpgradeRunner.Options memory opts =
             UpgradeRunner.Options({allowRemoveCore: false, strictUses: false, allowDualWrite: false});

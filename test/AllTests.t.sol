@@ -10,7 +10,6 @@ import {DiamondUpgrades} from "src/DiamondUpgrades.sol";
 // IO + sync helpers
 import {DesiredFacetsIO} from "src/internal/io/DesiredFacets.sol";
 import {StorageInit} from "src/internal/sync/StorageInit.sol";
-import {FacetSync} from "src/internal/sync/FacetSync.sol";
 import {ManifestIO} from "src/internal/io/Manifest.sol";
 import {TestHelpers} from "test/utils/TestHelpers.sol";
 
@@ -170,8 +169,7 @@ contract AllTests is Test {
         d1.facets = TestHelpers.appendFacet(d1.facets, TestHelpers.createFacetWithNamespace(ART_PLUS1, NS_ID));
         DesiredFacetsIO.save(d1);
 
-        // Синк селекторов и обновление
-        FacetSync.syncSelectors(NAME_EXAMPLE);
+        // Обновление (автоматически включает синк селекторов)
         address daddr = DiamondUpgrades.upgrade(NAME_EXAMPLE);
         assertEq(daddr, diamond, "diamond address changed unexpectedly in phase 1");
 
@@ -198,7 +196,6 @@ contract AllTests is Test {
         d2.facets = TestHelpers.appendFacet(d2.facets, TestHelpers.createFacetWithNamespace(ART_ADDV2, NS_ID));
 
         DesiredFacetsIO.save(d2);
-        FacetSync.syncSelectors(NAME_EXAMPLE);
 
         // Проверяем, что артефакт действительно заменился
         DesiredFacetsIO.DesiredState memory d2AfterSync = DesiredFacetsIO.load(NAME_EXAMPLE);
@@ -227,7 +224,6 @@ contract AllTests is Test {
         d3.facets = new DesiredFacetsIO.Facet[](0); // Очищаем все пользовательские фасеты
         DesiredFacetsIO.save(d3);
 
-        FacetSync.syncSelectors(NAME_EXAMPLE);
         address diamondAddr = DiamondUpgrades.upgrade(NAME_EXAMPLE);
         assertEq(diamondAddr, diamond, "diamond address changed in phase 3");
 
@@ -268,7 +264,6 @@ contract AllTests is Test {
         DesiredFacetsIO.DesiredState memory d4 = DesiredFacetsIO.load(NAME_EXAMPLE);
         d4.facets = TestHelpers.appendFacet(d4.facets, TestHelpers.createFacetWithNamespace(ART_EVIL, "ghost.v1"));
         DesiredFacetsIO.save(d4);
-        FacetSync.syncSelectors(NAME_EXAMPLE);
 
         // Этот upgrade должен завершиться ошибкой
         // (Мы не можем легко протестировать конкретную ошибку с vm.expectRevert из-за internal calls)
@@ -302,7 +297,6 @@ contract AllTests is Test {
         DesiredFacetsIO.DesiredState memory d = DesiredFacetsIO.load(NAME_EXAMPLE);
         d.facets = TestHelpers.appendFacet(d.facets, TestHelpers.createFacetWithNamespace(ART_PLUS1, NS_ID));
         DesiredFacetsIO.save(d);
-        FacetSync.syncSelectors(NAME_EXAMPLE);
 
         DiamondUpgrades.upgrade(NAME_EXAMPLE);
         assertEq(IPlusOne(diamond).plusOne(), 1, "plusOne add failed");
@@ -312,7 +306,6 @@ contract AllTests is Test {
         // Remove PlusOne facet by filtering it out
         d2.facets = TestHelpers.dropByArtifact(d2.facets, ART_PLUS1);
         DesiredFacetsIO.save(d2);
-        FacetSync.syncSelectors(NAME_EXAMPLE);
         DiamondUpgrades.upgrade(NAME_EXAMPLE);
 
         // calling plusOne() should revert: selector removed
@@ -329,7 +322,6 @@ contract AllTests is Test {
         DesiredFacetsIO.DesiredState memory d = DesiredFacetsIO.load(NAME_EXAMPLE);
         d.facets = TestHelpers.appendFacet(d.facets, TestHelpers.createFacetWithNamespace(ART_BAD, NS_ID));
         DesiredFacetsIO.save(d);
-        FacetSync.syncSelectors(NAME_EXAMPLE);
         // ожидаем revert в нашей валидации (SelectorCollision)
         vm.expectRevert();
         DiamondUpgrades.upgrade(NAME_EXAMPLE);
@@ -342,8 +334,7 @@ contract AllTests is Test {
         // Load the manifest after setup
         ManifestIO.Manifest memory m0 = ManifestIO.load(NAME_EXAMPLE);
 
-        // sync again without changing anything
-        FacetSync.syncSelectors(NAME_EXAMPLE);
+        // upgrade again without changing anything
         DiamondUpgrades.upgrade(NAME_EXAMPLE);
 
         ManifestIO.Manifest memory m1 = ManifestIO.load(NAME_EXAMPLE);
@@ -380,7 +371,6 @@ contract AllTests is Test {
         StorageInit.ensure({name: NAME_EXAMPLE, seeds: seeds, appendOnlyPolicy: true, allowDualWrite: false});
 
         // Desired facets - automatically discovered from src/example/ (built into deployDiamond)
-        FacetSync.syncSelectors(NAME_EXAMPLE);
 
         // Deploy diamond
         diamond = DiamondUpgrades.deployDiamond(
