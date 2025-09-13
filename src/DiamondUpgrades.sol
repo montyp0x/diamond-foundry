@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import {IDiamondCut} from "./interfaces/diamond/IDiamondCut.sol";
 import {IDiamondLoupe} from "./interfaces/diamond/IDiamondLoupe.sol";
+import {Vm} from "forge-std/Vm.sol";
 
 // internal libs (IO)
 import {ManifestIO} from "./internal/io/Manifest.sol";
@@ -23,6 +24,8 @@ import {DiamondDeployer} from "./internal/upgrade/DiamondDeployer.sol";
 /// @title DiamondUpgrades (manifest-only)
 /// @notice Public entrypoints for deploying and upgrading Diamonds using a manifest-driven flow.
 library DiamondUpgrades {
+    Vm internal constant VM = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
+
     // ─────────────────────────────────────────────────────────────────────────────
     // Types
     // ─────────────────────────────────────────────────────────────────────────────
@@ -90,6 +93,9 @@ library DiamondUpgrades {
         internal
         returns (address diamond)
     {
+        // 0) Ensure .diamond-upgrades directory exists for good UX
+        _ensureDiamondUpgradesDir(name);
+
         // 1) Prepare desiredPlus + initPair and validate `uses`
         DesiredFacetsIO.DesiredState memory desiredPlus;
         InitUtils.InitPair memory initPair;
@@ -194,6 +200,9 @@ library DiamondUpgrades {
 
     /// @notice High-level upgrade using the manifest-only pipeline; persists the new manifest.
     function upgrade(string memory name) internal returns (address diamond) {
+        // Ensure .diamond-upgrades directory exists for good UX
+        _ensureDiamondUpgradesDir(name);
+
         UpgradeRunner.Options memory opts =
             UpgradeRunner.Options({allowRemoveCore: false, strictUses: false, allowDualWrite: false});
 
@@ -296,5 +305,15 @@ library DiamondUpgrades {
             out[i].facetAddress = ops[i].facet;
             out[i].functionSelectors = ops[i].selectors;
         }
+    }
+
+    /// @notice Ensure .diamond-upgrades directory exists for good UX
+    function _ensureDiamondUpgradesDir(string memory name) internal {
+        // Create .diamond-upgrades directory if it doesn't exist
+        try VM.createDir(".diamond-upgrades", true) {} catch {}
+
+        // Create project-specific directory
+        string memory projectDir = string(abi.encodePacked(".diamond-upgrades/", name));
+        try VM.createDir(projectDir, true) {} catch {}
     }
 }
