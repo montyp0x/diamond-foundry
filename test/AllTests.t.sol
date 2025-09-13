@@ -382,7 +382,7 @@ contract AllTests is Test {
     function _cleanupProject(string memory name) internal {
         string memory base = string(abi.encodePacked(".diamond-upgrades/", name));
         try vm.removeDir(base, true) {} catch {}
-        
+
         // Also remove individual files to ensure clean state
         try vm.removeFile(string(abi.encodePacked(base, "/facets.json"))) {} catch {}
         try vm.removeFile(string(abi.encodePacked(base, "/storage.json"))) {} catch {}
