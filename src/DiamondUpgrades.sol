@@ -20,6 +20,7 @@ import {FacetDeployer} from "./internal/upgrade/FacetDeployer.sol";
 import {ManifestApply} from "./internal/upgrade/ManifestApply.sol";
 import {InitUtils} from "./internal/upgrade/InitUtils.sol";
 import {DiamondDeployer} from "./internal/upgrade/DiamondDeployer.sol";
+import {FacetDiscovery} from "./internal/utils/FacetDiscovery.sol";
 
 /// @title DiamondUpgrades (manifest-only)
 /// @notice Public entrypoints for deploying and upgrading Diamonds using a manifest-driven flow.
@@ -305,6 +306,49 @@ library DiamondUpgrades {
             out[i].facetAddress = ops[i].facet;
             out[i].functionSelectors = ops[i].selectors;
         }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Automatic facet discovery
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    /// @notice Automatically creates and saves a DesiredState by discovering facets from src/example/
+    /// @param name The project name
+    /// @param namespace The namespace to use for all discovered facets
+    function autoDiscoverAndSaveFacets(string memory name, string memory namespace) internal {
+        DesiredFacetsIO.DesiredState memory d = FacetDiscovery.discoverExampleFacets(name, namespace);
+        DesiredFacetsIO.save(d);
+    }
+
+    /// @notice Deploys a diamond with automatically discovered facets from src/example/
+    /// @param name The project name
+    /// @param namespace The namespace to use for discovered facets
+    /// @param deploy Deploy options
+    /// @param initOverride Init specification override
+    /// @return diamond The deployed diamond address
+    function deployDiamondWithAutoDiscovery(
+        string memory name,
+        string memory namespace,
+        DeployOpts memory deploy,
+        InitSpec memory initOverride
+    ) internal returns (address diamond) {
+        // Auto-discover and save facets
+        autoDiscoverAndSaveFacets(name, namespace);
+
+        // Deploy using the standard flow
+        return deployDiamond(name, deploy, initOverride);
+    }
+
+    /// @notice Upgrades a diamond with automatically discovered facets from src/example/
+    /// @param name The project name
+    /// @param namespace The namespace to use for discovered facets
+    /// @return diamond The upgraded diamond address
+    function upgradeWithAutoDiscovery(string memory name, string memory namespace) internal returns (address diamond) {
+        // Auto-discover and save facets
+        autoDiscoverAndSaveFacets(name, namespace);
+
+        // Upgrade using the standard flow
+        return upgrade(name);
     }
 
     /// @notice Ensure .diamond-upgrades directory exists for good UX

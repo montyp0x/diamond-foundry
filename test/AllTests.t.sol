@@ -166,7 +166,8 @@ contract AllTests is Test {
         console.log("=== PHASE 1: Adding new functionality (PlusOneFacet) ===");
 
         // Создаем новое состояние с PlusOneFacet (автоматически + локальный фасет)
-        DesiredFacetsIO.DesiredState memory d1 = TestHelpers.createDesiredStateFromExample(NAME_EXAMPLE, NS_ID);
+        DiamondUpgrades.autoDiscoverAndSaveFacets(NAME_EXAMPLE, NS_ID);
+        DesiredFacetsIO.DesiredState memory d1 = DesiredFacetsIO.load(NAME_EXAMPLE);
         d1.facets = TestHelpers.appendFacet(d1.facets, TestHelpers.createFacetWithNamespace(ART_PLUS1, NS_ID));
         DesiredFacetsIO.save(d1);
 
@@ -299,7 +300,8 @@ contract AllTests is Test {
         _setupExampleProject();
 
         // add PlusOne (non-core) - create new desired state since cleanup resets everything
-        DesiredFacetsIO.DesiredState memory d = TestHelpers.createDesiredStateFromExample(NAME_EXAMPLE, NS_ID);
+        DiamondUpgrades.autoDiscoverAndSaveFacets(NAME_EXAMPLE, NS_ID);
+        DesiredFacetsIO.DesiredState memory d = DesiredFacetsIO.load(NAME_EXAMPLE);
         d.facets = TestHelpers.appendFacet(d.facets, TestHelpers.createFacetWithNamespace(ART_PLUS1, NS_ID));
         DesiredFacetsIO.save(d);
         FacetSync.syncSelectors(NAME_EXAMPLE);
@@ -308,8 +310,7 @@ contract AllTests is Test {
         assertEq(IPlusOne(diamond).plusOne(), 1, "plusOne add failed");
 
         // now remove PlusOne - ensure clean state first (keep only example facets)
-        d = TestHelpers.createDesiredStateFromExample(NAME_EXAMPLE, NS_ID);
-        DesiredFacetsIO.save(d);
+        DiamondUpgrades.autoDiscoverAndSaveFacets(NAME_EXAMPLE, NS_ID);
         FacetSync.syncSelectors(NAME_EXAMPLE);
         DiamondUpgrades.upgrade(NAME_EXAMPLE);
 
@@ -324,7 +325,8 @@ contract AllTests is Test {
         _setupExampleProject();
 
         // add BadCollisionFacet with same selector increment(uint256)
-        DesiredFacetsIO.DesiredState memory d = TestHelpers.createDesiredStateFromExample(NAME_EXAMPLE, NS_ID);
+        DiamondUpgrades.autoDiscoverAndSaveFacets(NAME_EXAMPLE, NS_ID);
+        DesiredFacetsIO.DesiredState memory d = DesiredFacetsIO.load(NAME_EXAMPLE);
         d.facets = TestHelpers.appendFacet(d.facets, TestHelpers.createFacetWithNamespace(ART_BAD, NS_ID));
         DesiredFacetsIO.save(d);
         FacetSync.syncSelectors(NAME_EXAMPLE);
@@ -378,8 +380,7 @@ contract AllTests is Test {
         StorageInit.ensure({name: NAME_EXAMPLE, seeds: seeds, appendOnlyPolicy: true, allowDualWrite: false});
 
         // Desired facets - automatically discovered from src/example/
-        DesiredFacetsIO.DesiredState memory d = TestHelpers.createDesiredStateFromExample(NAME_EXAMPLE, NS_ID);
-        DesiredFacetsIO.save(d);
+        DiamondUpgrades.autoDiscoverAndSaveFacets(NAME_EXAMPLE, NS_ID);
         FacetSync.syncSelectors(NAME_EXAMPLE);
 
         // Deploy diamond
