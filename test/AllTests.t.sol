@@ -114,11 +114,13 @@ contract AllTests is Test {
 
         // Создаем базовую структуру каталогов
         vm.createDir(".diamond-upgrades", true);
+        vm.createDir(string(abi.encodePacked(".diamond-upgrades/", NAME_EXAMPLE)), true);
     }
 
     // ─── Базовые тесты из ExampleCounter.t.sol ────────────────────────────────
 
     function testCounterFlow() public {
+        _cleanupProject(NAME_EXAMPLE);
         _setupExampleProject();
 
         // Initially zero
@@ -135,6 +137,7 @@ contract AllTests is Test {
     }
 
     function testManifestSavedAndHasFacets() public {
+        _cleanupProject(NAME_EXAMPLE);
         _setupExampleProject();
 
         // Load manifest written by deployDiamond()
@@ -156,6 +159,7 @@ contract AllTests is Test {
     // ─── Полный жизненный цикл из FullFlow.t.sol ──────────────────────────────
 
     function test_FullDiamondLifecycle() public {
+        _cleanupProject(NAME_EXAMPLE);
         _setupExampleProject();
 
         // ═══ ФАЗА 1: Добавление новой функциональности (PlusOneFacet) ═══
@@ -280,6 +284,7 @@ contract AllTests is Test {
     }
 
     function test_ManifestConsistency() public {
+        _cleanupProject(NAME_EXAMPLE);
         _setupExampleProject();
 
         // После деплоя должен быть создан корректный манифест
@@ -295,6 +300,7 @@ contract AllTests is Test {
     // ─── Продвинутые сценарии из AdvancedScenarios.t.sol ──────────────────────
 
     function test_RemoveNonCoreFacet() public {
+        _cleanupProject(NAME_EXAMPLE);
         _setupExampleProject();
 
         // add PlusOne (non-core) - create new desired state since cleanup resets everything
@@ -330,6 +336,7 @@ contract AllTests is Test {
     }
 
     function test_AddCollision_Reverts() public {
+        _cleanupProject(NAME_EXAMPLE);
         _setupExampleProject();
 
         // add BadCollisionFacet with same selector increment(uint256)
@@ -348,6 +355,7 @@ contract AllTests is Test {
     }
 
     function test_NoOpUpgrade_ReusesFacetAddresses() public {
+        _cleanupProject(NAME_EXAMPLE);
         _setupExampleProject();
 
         // Load the manifest after setup
@@ -374,6 +382,11 @@ contract AllTests is Test {
     function _cleanupProject(string memory name) internal {
         string memory base = string(abi.encodePacked(".diamond-upgrades/", name));
         try vm.removeDir(base, true) {} catch {}
+        
+        // Also remove individual files to ensure clean state
+        try vm.removeFile(string(abi.encodePacked(base, "/facets.json"))) {} catch {}
+        try vm.removeFile(string(abi.encodePacked(base, "/storage.json"))) {} catch {}
+        try vm.removeFile(string(abi.encodePacked(base, "/manifest.json"))) {} catch {}
     }
 
     function _setupExampleProject() internal {

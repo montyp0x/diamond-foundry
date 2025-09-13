@@ -594,6 +594,25 @@ forge script script/Deploy.s.sol \
   --interactives 1
 ```
 </deployment_patterns>
+
+<commits>
+
+1. **Follow Conventional Commits.** Supported types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `perf`, `build`, `ci`, `revert`.
+2. **Single‑line only.** Generate just the subject; no body or footer unless the developer passes `--long`.
+3. **Hard length limit.** The subject line must be **≤ 50 characters**, including type and scope.
+4. **Imperative present tense.** Start with a verb such as “add”, “remove”, “update”, “refactor”.
+5. **Mandatory scope for contracts.** If any staged file path begins with `contracts/`, include the scope `(contracts)` right after the type (e.g., `feat(contracts): …`).
+6. **Optional scope otherwise.** For other changes, a single‑word scope is allowed but not required. Keep it concise.
+7. **No wrappers.** Do not wrap the commit message in quotes, back‑ticks, or code fences; output the plain line alone.
+8. **Be precise.** Avoid filler words (“the”, “a”, “an”) when not needed; prefer descriptive nouns.
+9. **Override length only when flagged.** If the staged commit message already contains `--long`, you MAY include a longer body after a blank line; otherwise, omit.
+
+## Examples
+feat(contracts): deploy new ERC20
+fix(contracts): correct overflow check
+feat: add user login flow
+
+</commits>
  
 <user_prompt>
 {user_prompt}
