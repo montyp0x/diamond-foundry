@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import {Vm} from "forge-std/Vm.sol";
 import {DesiredFacetsIO} from "../io/DesiredFacets.sol";
 import {StringUtils} from "../utils/StringUtils.sol";
+import {FacetDiscovery} from "../utils/FacetDiscovery.sol";
 
 /// @title FacetSync
 /// @notice Sync desired facets' selectors from compiled artifact ABIs in `out/`.
@@ -13,6 +14,9 @@ library FacetSync {
 
     /// @notice Recompute selectors for every facet in `.diamond-upgrades/<name>.facets.json` from ABI.
     function syncSelectors(string memory name) internal {
+        // Auto-discover facets if no facets.json exists
+        _autoDiscoverFacetsIfNeeded(name);
+
         DesiredFacetsIO.DesiredState memory d = DesiredFacetsIO.load(name);
 
         for (uint256 i = 0; i < d.facets.length; i++) {
@@ -163,5 +167,22 @@ library FacetSync {
 
     function _eq(string memory a, string memory b) private pure returns (bool) {
         return keccak256(bytes(a)) == keccak256(bytes(b));
+    }
+
+    /// @notice Auto-discover facets from src/example/ if no facets.json exists
+    /// @param name The project name
+    function _autoDiscoverFacetsIfNeeded(string memory name) private {
+        string memory facetsPath = string(abi.encodePacked(".diamond-upgrades/", name, "/facets.json"));
+
+        // Check if facets.json exists
+        try VM.readFile(facetsPath) returns (string memory) {
+            // File exists, do nothing
+            return;
+        } catch {
+            // File doesn't exist, auto-discover facets
+            // Use "counter.v1" as default namespace for example facets
+            DesiredFacetsIO.DesiredState memory d = FacetDiscovery.discoverExampleFacets(name, "counter.v1");
+            DesiredFacetsIO.save(d);
+        }
     }
 }
