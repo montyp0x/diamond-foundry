@@ -165,14 +165,9 @@ contract AllTests is Test {
         // ═══ ФАЗА 1: Добавление новой функциональности (PlusOneFacet) ═══
         console.log("=== PHASE 1: Adding new functionality (PlusOneFacet) ===");
 
-        // Создаем новое состояние с PlusOneFacet
-        DesiredFacetsIO.DesiredState memory d1;
-        d1.name = NAME_EXAMPLE;
-        d1.init = DesiredFacetsIO.InitSpec({target: address(0), data: ""});
-        d1.facets = new DesiredFacetsIO.Facet[](3);
-        d1.facets[0] = TestHelpers.createFacetWithNamespace(ART_ADD, NS_ID);
-        d1.facets[1] = TestHelpers.createFacetWithNamespace(ART_VIEW, NS_ID);
-        d1.facets[2] = TestHelpers.createFacetWithNamespace(ART_PLUS1, NS_ID);
+        // Создаем новое состояние с PlusOneFacet (автоматически + локальный фасет)
+        DesiredFacetsIO.DesiredState memory d1 = TestHelpers.createDesiredStateFromExample(NAME_EXAMPLE, NS_ID);
+        d1.facets = TestHelpers.appendFacet(d1.facets, TestHelpers.createFacetWithNamespace(ART_PLUS1, NS_ID));
         DesiredFacetsIO.save(d1);
 
         // Синк селекторов и обновление
@@ -304,27 +299,16 @@ contract AllTests is Test {
         _setupExampleProject();
 
         // add PlusOne (non-core) - create new desired state since cleanup resets everything
-        DesiredFacetsIO.DesiredState memory d;
-        d.name = NAME_EXAMPLE;
-        d.init = DesiredFacetsIO.InitSpec({target: address(0), data: ""});
-        d.facets = new DesiredFacetsIO.Facet[](3);
-        d.facets[0] = DesiredFacetsIO.Facet({artifact: ART_ADD, selectors: new bytes4[](0), uses: _one(NS_ID)});
-        d.facets[1] = DesiredFacetsIO.Facet({artifact: ART_VIEW, selectors: new bytes4[](0), uses: _one(NS_ID)});
-        d.facets[2] = DesiredFacetsIO.Facet({artifact: ART_PLUS1, selectors: new bytes4[](0), uses: _one(NS_ID)});
+        DesiredFacetsIO.DesiredState memory d = TestHelpers.createDesiredStateFromExample(NAME_EXAMPLE, NS_ID);
+        d.facets = TestHelpers.appendFacet(d.facets, TestHelpers.createFacetWithNamespace(ART_PLUS1, NS_ID));
         DesiredFacetsIO.save(d);
         FacetSync.syncSelectors(NAME_EXAMPLE);
 
         DiamondUpgrades.upgrade(NAME_EXAMPLE);
         assertEq(IPlusOne(diamond).plusOne(), 1, "plusOne add failed");
 
-        // now remove PlusOne - ensure clean state first
-        d = DesiredFacetsIO.DesiredState({
-            name: NAME_EXAMPLE,
-            init: DesiredFacetsIO.InitSpec({target: address(0), data: ""}),
-            facets: new DesiredFacetsIO.Facet[](2)
-        });
-        d.facets[0] = DesiredFacetsIO.Facet({artifact: ART_ADD, selectors: new bytes4[](0), uses: _one(NS_ID)});
-        d.facets[1] = DesiredFacetsIO.Facet({artifact: ART_VIEW, selectors: new bytes4[](0), uses: _one(NS_ID)});
+        // now remove PlusOne - ensure clean state first (keep only example facets)
+        d = TestHelpers.createDesiredStateFromExample(NAME_EXAMPLE, NS_ID);
         DesiredFacetsIO.save(d);
         FacetSync.syncSelectors(NAME_EXAMPLE);
         DiamondUpgrades.upgrade(NAME_EXAMPLE);
@@ -340,13 +324,8 @@ contract AllTests is Test {
         _setupExampleProject();
 
         // add BadCollisionFacet with same selector increment(uint256)
-        DesiredFacetsIO.DesiredState memory d;
-        d.name = NAME_EXAMPLE;
-        d.init = DesiredFacetsIO.InitSpec({target: address(0), data: ""});
-        d.facets = new DesiredFacetsIO.Facet[](3);
-        d.facets[0] = DesiredFacetsIO.Facet({artifact: ART_ADD, selectors: new bytes4[](0), uses: _one(NS_ID)});
-        d.facets[1] = DesiredFacetsIO.Facet({artifact: ART_VIEW, selectors: new bytes4[](0), uses: _one(NS_ID)});
-        d.facets[2] = DesiredFacetsIO.Facet({artifact: ART_BAD, selectors: new bytes4[](0), uses: _one(NS_ID)});
+        DesiredFacetsIO.DesiredState memory d = TestHelpers.createDesiredStateFromExample(NAME_EXAMPLE, NS_ID);
+        d.facets = TestHelpers.appendFacet(d.facets, TestHelpers.createFacetWithNamespace(ART_BAD, NS_ID));
         DesiredFacetsIO.save(d);
         FacetSync.syncSelectors(NAME_EXAMPLE);
         // ожидаем revert в нашей валидации (SelectorCollision)
@@ -398,13 +377,8 @@ contract AllTests is Test {
         seeds[0] = StorageInit.NamespaceSeed({namespaceId: NS_ID, version: 1, artifact: LIB_ART, libraryName: LIB_NAME});
         StorageInit.ensure({name: NAME_EXAMPLE, seeds: seeds, appendOnlyPolicy: true, allowDualWrite: false});
 
-        // Desired facets
-        DesiredFacetsIO.DesiredState memory d;
-        d.name = NAME_EXAMPLE;
-        d.init = DesiredFacetsIO.InitSpec({target: address(0), data: ""});
-        d.facets = new DesiredFacetsIO.Facet[](2);
-        d.facets[0] = TestHelpers.createFacetWithNamespace(ART_ADD, NS_ID);
-        d.facets[1] = TestHelpers.createFacetWithNamespace(ART_VIEW, NS_ID);
+        // Desired facets - automatically discovered from src/example/
+        DesiredFacetsIO.DesiredState memory d = TestHelpers.createDesiredStateFromExample(NAME_EXAMPLE, NS_ID);
         DesiredFacetsIO.save(d);
         FacetSync.syncSelectors(NAME_EXAMPLE);
 

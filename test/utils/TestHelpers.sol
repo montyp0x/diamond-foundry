@@ -3,6 +3,7 @@ pragma solidity ^0.8.24;
 
 import {DesiredFacetsIO} from "src/internal/io/DesiredFacets.sol";
 import {StorageConfigIO} from "src/internal/io/StorageConfig.sol";
+import {FacetDiscovery} from "src/internal/utils/FacetDiscovery.sol";
 
 /// @title TestHelpers
 /// @notice Common utility functions for diamond upgrade tests
@@ -202,5 +203,21 @@ library TestHelpers {
                 return;
             }
         }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Automatic facet discovery utilities
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    /// @notice Automatically creates a DesiredState by discovering facets from src/example/
+    /// @param name The project name
+    /// @param namespace The namespace to use for all discovered facets
+    /// @return d The DesiredState with all discovered facets
+    function createDesiredStateFromExample(string memory name, string memory namespace)
+        internal
+        pure
+        returns (DesiredFacetsIO.DesiredState memory d)
+    {
+        return FacetDiscovery.discoverExampleFacets(name, namespace);
     }
 }
