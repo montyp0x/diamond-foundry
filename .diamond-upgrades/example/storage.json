@@ -1,0 +1,17 @@
+{
+  "name": "example",
+  "appendOnlyPolicy": true,
+  "allowDualWrite": false,
+  "namespacesCount": 1,
+  "namespaces": [
+    {
+      "namespaceId": "counter.v1",
+      "slot": "0xb3d60b02a06cb5befd9827cc61b3ca9ef0eea66c39e6b0c1bc96df9703456ed5",
+      "version": 1,
+      "status": 0,
+      "supersededBy": "",
+      "artifact": "LibCounterStorage.sol:LibCounterStorage",
+      "libraryName": "LibCounterStorage"
+    }
+  ]
+}
