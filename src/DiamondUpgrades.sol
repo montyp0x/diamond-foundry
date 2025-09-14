@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+// for compilation only
+import {DiamondCutFacet} from "./facets/DiamondCutFacet.sol";
+import {DiamondLoupeFacet} from "./facets/DiamondLoupeFacet.sol";
+import {OwnershipFacet} from "./facets/OwnershipFacet.sol";
+
 import {IDiamondCut} from "./interfaces/diamond/IDiamondCut.sol";
 import {IDiamondLoupe} from "./interfaces/diamond/IDiamondLoupe.sol";
 import {Vm} from "forge-std/Vm.sol";
