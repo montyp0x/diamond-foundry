@@ -6,12 +6,12 @@ pragma solidity ^0.8.24;
 contract EventsOnlyFacet {
     /// @notice Event definition
     event TestEvent(uint256 indexed value, string message);
-    
+
     /// @notice Constructor (should be ignored)
     constructor() {
         emit TestEvent(0, "Constructor called");
     }
-    
+
     /// @notice Another event
     event AnotherEvent(address indexed sender, bool flag);
 }

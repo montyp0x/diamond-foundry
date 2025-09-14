@@ -8,7 +8,7 @@ import {LibCounterStorage} from "src/example/libraries/counter/LibCounterStorage
 contract AdminFacet {
     address public admin;
     bool public paused;
-    
+
     event AdminChanged(address indexed oldAdmin, address indexed newAdmin);
     event Paused();
     event Unpaused();

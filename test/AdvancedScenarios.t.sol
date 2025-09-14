@@ -54,7 +54,9 @@ interface IAdminFacet {
 
 // Event definitions for testing
 event ValueChanged(uint256 oldValue, uint256 newValue);
+
 event SpecialEvent(string message, uint256 value);
+
 event ComplexEvent(uint256 indexed id, string data, uint256[] numbers);
 
 /// @title AdvancedScenarios
@@ -72,7 +74,7 @@ contract AdvancedScenarios is Test {
     function setUp() public {
         // Clean up any existing project state
         _cleanupProject(NAME_EXAMPLE);
-        
+
         // Create base directory structure
         vm.createDir(".diamond-upgrades", true);
         vm.createDir(string(abi.encodePacked(".diamond-upgrades/", NAME_EXAMPLE)), true);
@@ -86,7 +88,7 @@ contract AdvancedScenarios is Test {
         // Ensure facets are synced (should have AddFacet, ViewFacet, MathFacet)
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -127,7 +129,7 @@ contract AdvancedScenarios is Test {
         // Ensure facets are synced (should have AddFacet, ViewFacet, StorageFacet)
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -164,7 +166,7 @@ contract AdvancedScenarios is Test {
         // Ensure facets are synced (should have AddFacet, ViewFacet, EventFacet)
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -177,7 +179,7 @@ contract AdvancedScenarios is Test {
 
         // Test event emission
         IAddFacet(diamond).increment(10);
-        
+
         // Test setWithEvent
         vm.expectEmit(true, true, true, true);
         emit ValueChanged(10, 25);
@@ -194,7 +196,7 @@ contract AdvancedScenarios is Test {
         numbers[0] = 1;
         numbers[1] = 2;
         numbers[2] = 3;
-        
+
         vm.expectEmit(true, false, false, true);
         emit ComplexEvent(123, "complex data", numbers);
         IEventFacet(diamond).emitComplex(123, "complex data", numbers);
@@ -210,7 +212,7 @@ contract AdvancedScenarios is Test {
         // Ensure facets are synced (should have AddFacet, ViewFacet, AdminFacet)
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -260,7 +262,7 @@ contract AdvancedScenarios is Test {
         // Ensure facets are synced (should have all facets)
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -312,7 +314,7 @@ contract AdvancedScenarios is Test {
     function test_edge_case_zero_values() public {
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -338,7 +340,7 @@ contract AdvancedScenarios is Test {
     function test_edge_case_large_values() public {
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -363,7 +365,7 @@ contract AdvancedScenarios is Test {
         // Test rapid upgrades
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -402,17 +404,7 @@ contract AdvancedScenarios is Test {
 
     function _setupStorageConfig() internal {
         StorageInit.NamespaceSeed[] memory seeds = new StorageInit.NamespaceSeed[](1);
-        seeds[0] = StorageInit.NamespaceSeed({
-            namespaceId: NS_ID,
-            version: 1,
-            artifact: LIB_ART,
-            libraryName: LIB_NAME
-        });
-        StorageInit.ensure({
-            name: NAME_EXAMPLE,
-            seeds: seeds,
-            appendOnlyPolicy: true,
-            allowDualWrite: false
-        });
+        seeds[0] = StorageInit.NamespaceSeed({namespaceId: NS_ID, version: 1, artifact: LIB_ART, libraryName: LIB_NAME});
+        StorageInit.ensure({name: NAME_EXAMPLE, seeds: seeds, appendOnlyPolicy: true, allowDualWrite: false});
     }
 }

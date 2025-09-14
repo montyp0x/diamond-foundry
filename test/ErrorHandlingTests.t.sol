@@ -48,7 +48,7 @@ contract ErrorHandlingTests is Test {
     function setUp() public {
         // Clean up any existing project state
         _cleanupProject(NAME_EXAMPLE);
-        
+
         // Create base directory structure
         vm.createDir(".diamond-upgrades", true);
         vm.createDir(string(abi.encodePacked(".diamond-upgrades/", NAME_EXAMPLE)), true);
@@ -61,7 +61,7 @@ contract ErrorHandlingTests is Test {
     function test_access_control_admin_functions() public {
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -95,7 +95,7 @@ contract ErrorHandlingTests is Test {
     function test_access_control_pause_mechanism() public {
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -133,7 +133,7 @@ contract ErrorHandlingTests is Test {
     function test_edge_case_overflow_protection() public {
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -157,7 +157,7 @@ contract ErrorHandlingTests is Test {
     function test_edge_case_underflow_protection() public {
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -181,7 +181,7 @@ contract ErrorHandlingTests is Test {
     function test_edge_case_zero_operations() public {
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -208,7 +208,7 @@ contract ErrorHandlingTests is Test {
     function test_edge_case_large_numbers() public {
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -237,7 +237,7 @@ contract ErrorHandlingTests is Test {
     function test_error_recovery_after_failed_operation() public {
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -268,7 +268,7 @@ contract ErrorHandlingTests is Test {
     function test_error_recovery_after_pause() public {
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -309,7 +309,7 @@ contract ErrorHandlingTests is Test {
     function test_boundary_conditions_min_values() public {
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -335,7 +335,7 @@ contract ErrorHandlingTests is Test {
     function test_boundary_conditions_max_values() public {
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -373,17 +373,7 @@ contract ErrorHandlingTests is Test {
 
     function _setupStorageConfig() internal {
         StorageInit.NamespaceSeed[] memory seeds = new StorageInit.NamespaceSeed[](1);
-        seeds[0] = StorageInit.NamespaceSeed({
-            namespaceId: NS_ID,
-            version: 1,
-            artifact: LIB_ART,
-            libraryName: LIB_NAME
-        });
-        StorageInit.ensure({
-            name: NAME_EXAMPLE,
-            seeds: seeds,
-            appendOnlyPolicy: true,
-            allowDualWrite: false
-        });
+        seeds[0] = StorageInit.NamespaceSeed({namespaceId: NS_ID, version: 1, artifact: LIB_ART, libraryName: LIB_NAME});
+        StorageInit.ensure({name: NAME_EXAMPLE, seeds: seeds, appendOnlyPolicy: true, allowDualWrite: false});
     }
 }

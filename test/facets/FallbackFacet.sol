@@ -8,7 +8,7 @@ contract FallbackFacet {
     receive() external payable {
         // This should not be counted as a function
     }
-    
+
     /// @notice Fallback function (should be ignored)
     fallback() external payable {
         // This should not be counted as a function

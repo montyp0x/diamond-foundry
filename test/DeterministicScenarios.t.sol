@@ -53,7 +53,7 @@ contract DeterministicScenarios is Test {
     function setUp() public {
         // Clean up any existing project state
         _cleanupProject(NAME_EXAMPLE);
-        
+
         // Create base directory structure
         vm.createDir(".diamond-upgrades", true);
         vm.createDir(string(abi.encodePacked(".diamond-upgrades/", NAME_EXAMPLE)), true);
@@ -162,11 +162,11 @@ contract DeterministicScenarios is Test {
         // This test demonstrates the replace scenario by deploying with V2 directly
         // In a real scenario, you would first deploy with V1, then upgrade to V2
         // But for deterministic testing, we deploy directly with V2
-        
+
         // Ensure facets are synced (should have AddFacetV2 and ViewFacet)
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -195,11 +195,11 @@ contract DeterministicScenarios is Test {
         // This test demonstrates the remove scenario by deploying with only ViewFacet
         // In a real scenario, you would first deploy with multiple facets, then upgrade to remove some
         // But for deterministic testing, we deploy directly with only ViewFacet
-        
+
         // Ensure facets are synced (should have only ViewFacet)
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -240,11 +240,11 @@ contract DeterministicScenarios is Test {
     function test_05_collision_detection() public {
         // Clean up and start fresh for collision test
         _cleanupProject(NAME_EXAMPLE);
-        
+
         // Create directory structure
         vm.createDir(".diamond-upgrades", true);
         vm.createDir(string(abi.encodePacked(".diamond-upgrades/", NAME_EXAMPLE)), true);
-        
+
         _setupStorageConfig();
 
         // Ensure facets are synced (should include both BoomA and BoomB with same selector)
@@ -280,17 +280,7 @@ contract DeterministicScenarios is Test {
 
     function _setupStorageConfig() internal {
         StorageInit.NamespaceSeed[] memory seeds = new StorageInit.NamespaceSeed[](1);
-        seeds[0] = StorageInit.NamespaceSeed({
-            namespaceId: NS_ID,
-            version: 1,
-            artifact: LIB_ART,
-            libraryName: LIB_NAME
-        });
-        StorageInit.ensure({
-            name: NAME_EXAMPLE,
-            seeds: seeds,
-            appendOnlyPolicy: true,
-            allowDualWrite: false
-        });
+        seeds[0] = StorageInit.NamespaceSeed({namespaceId: NS_ID, version: 1, artifact: LIB_ART, libraryName: LIB_NAME});
+        StorageInit.ensure({name: NAME_EXAMPLE, seeds: seeds, appendOnlyPolicy: true, allowDualWrite: false});
     }
 }

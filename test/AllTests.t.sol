@@ -391,7 +391,7 @@ contract AllTests is Test {
         ManifestIO.Manifest memory m0 = ManifestIO.load(NAME_EXAMPLE);
         bytes32 stateHash0 = m0.state.stateHash;
         uint256 facetCount0 = m0.state.facets.length;
-        
+
         // Store facet addresses before first upgrade
         address[] memory addresses0 = new address[](facetCount0);
         for (uint256 i = 0; i < facetCount0; i++) {
@@ -409,7 +409,7 @@ contract AllTests is Test {
         // Verify no changes in first upgrade
         assertEq(stateHash0, stateHash1, "State hash changed in no-op upgrade");
         assertEq(facetCount0, facetCount1, "Facet count changed in no-op upgrade");
-        
+
         // Verify facet addresses are the same
         for (uint256 i = 0; i < facetCount1; i++) {
             assertEq(addresses0[i], m1.state.facets[i].facet, "Facet address changed in no-op upgrade");
@@ -426,7 +426,7 @@ contract AllTests is Test {
         // Verify no changes in second upgrade
         assertEq(stateHash1, stateHash2, "State hash changed in second no-op upgrade");
         assertEq(facetCount1, facetCount2, "Facet count changed in second no-op upgrade");
-        
+
         // Verify facet addresses are still the same
         for (uint256 i = 0; i < facetCount2; i++) {
             assertEq(addresses0[i], m2.state.facets[i].facet, "Facet address changed in second no-op upgrade");
@@ -459,8 +459,14 @@ contract AllTests is Test {
 
         // Verify facet ordering is consistent
         for (uint256 i = 0; i < m1.state.facets.length; i++) {
-            assertEq(m1.state.facets[i].artifact, m2.state.facets[i].artifact, "Facet artifact ordering should be deterministic");
-            assertEq(m1.state.facets[i].facet, m2.state.facets[i].facet, "Facet address ordering should be deterministic");
+            assertEq(
+                m1.state.facets[i].artifact,
+                m2.state.facets[i].artifact,
+                "Facet artifact ordering should be deterministic"
+            );
+            assertEq(
+                m1.state.facets[i].facet, m2.state.facets[i].facet, "Facet address ordering should be deterministic"
+            );
         }
 
         console.log("[OK] Deterministic ordering test passed: plan ordering is consistent");
@@ -479,21 +485,14 @@ contract AllTests is Test {
         // Deploy with custom init (this tests that init from call overrides facets.json.init)
         DiamondUpgrades.DeployOpts memory deployOpts = DiamondUpgrades.DeployOpts({
             owner: owner,
-            opts: DiamondUpgrades.Options({
-                unsafeLayout: false,
-                allowDualWrite: false,
-                force: false
-            })
+            opts: DiamondUpgrades.Options({unsafeLayout: false, allowDualWrite: false, force: false})
         });
-        DiamondUpgrades.InitSpec memory initSpec = DiamondUpgrades.InitSpec({
-            target: address(0),
-            data: ""
-        });
+        DiamondUpgrades.InitSpec memory initSpec = DiamondUpgrades.InitSpec({target: address(0), data: ""});
         address daddr = DiamondUpgrades.deployDiamond(NAME_EXAMPLE, deployOpts, initSpec);
-        
+
         // Verify diamond was deployed successfully
         assertTrue(daddr != address(0), "Diamond deployment failed");
-        
+
         // Update our diamond reference for this test
         diamond = daddr;
 
@@ -518,14 +517,14 @@ contract AllTests is Test {
 
         // Attempt upgrade - this tests the upgrade system with a facet that has init issues
         DiamondUpgrades.upgrade(NAME_EXAMPLE);
-        
+
         // Get final manifest state
         ManifestIO.Manifest memory m1 = ManifestIO.load(NAME_EXAMPLE);
-        
+
         // Verify that upgrade completed (regardless of init behavior)
         // The exact behavior depends on how the system handles init failures
         assertTrue(m1.state.facets.length >= initialFacetCount, "Facet count should not decrease");
-        
+
         // Note: This test documents current behavior. In a complete implementation,
         // we would test that init reverts cause the entire upgrade to fail
         console.log("[OK] Init revert atomicity test passed: upgrade system handles init issues");
@@ -551,15 +550,16 @@ contract AllTests is Test {
         // Test that we can add another facet (this tests the upgrade system)
         // Note: This test demonstrates the upgrade system works
         // For true runtime hash replacement, we would need V2 facets with different bytecode
-        
+
         // Verify state hash exists and is consistent
         assertTrue(m1.state.stateHash != bytes32(0), "State hash should be non-zero");
 
-        console.log("[OK] Replace by runtime hash test passed: upgrade system works (runtime hash replacement needs V2 facets)");
+        console.log(
+            "[OK] Replace by runtime hash test passed: upgrade system works (runtime hash replacement needs V2 facets)"
+        );
     }
 
     // ─── Additional Critical Tests ─────────────────────────────────────────────────
-
 
     // Test 17: Overloads / Same Names
     function test_17_overloads_same_names() public {

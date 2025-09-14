@@ -45,7 +45,7 @@ contract PerformanceTests is Test {
     function setUp() public {
         // Clean up any existing project state
         _cleanupProject(NAME_EXAMPLE);
-        
+
         // Create base directory structure
         vm.createDir(".diamond-upgrades", true);
         vm.createDir(string(abi.encodePacked(".diamond-upgrades/", NAME_EXAMPLE)), true);
@@ -58,7 +58,7 @@ contract PerformanceTests is Test {
     function test_gas_deployment() public {
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         uint256 gasBefore = gasleft();
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
@@ -69,7 +69,7 @@ contract PerformanceTests is Test {
             DiamondUpgrades.InitSpec({target: address(0), data: ""})
         );
         uint256 gasUsed = gasBefore - gasleft();
-        
+
         console.log("Diamond deployment gas used:", gasUsed);
         assertTrue(gasUsed < 5_000_000, "Deployment gas too high");
         assertTrue(diamond != address(0), "Diamond not deployed");
@@ -78,7 +78,7 @@ contract PerformanceTests is Test {
     function test_gas_simple_operations() public {
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -112,7 +112,7 @@ contract PerformanceTests is Test {
     function test_gas_math_operations() public {
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -153,7 +153,7 @@ contract PerformanceTests is Test {
     function test_gas_storage_operations() public {
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -196,7 +196,7 @@ contract PerformanceTests is Test {
     function test_performance_batch_operations() public {
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -233,7 +233,7 @@ contract PerformanceTests is Test {
     function test_performance_large_calculations() public {
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -265,7 +265,7 @@ contract PerformanceTests is Test {
     function test_performance_memory_usage() public {
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -282,7 +282,7 @@ contract PerformanceTests is Test {
         }
 
         uint256 startGas = gasleft();
-        
+
         // Perform operations with large data
         for (uint256 i = 0; i < 100; i++) {
             IMathFacet(diamond).addNumbers(largeArray[i], largeArray[i + 1]);
@@ -305,7 +305,7 @@ contract PerformanceTests is Test {
     function test_stress_rapid_calls() public {
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -320,7 +320,7 @@ contract PerformanceTests is Test {
             IAddFacet(diamond).increment(1);
             IMathFacet(diamond).multiply(2);
             IStorageFacet(diamond).halve();
-            
+
             // Verify state consistency
             assertTrue(IViewFacet(diamond).get() >= 0, "State inconsistency detected");
         }
@@ -332,7 +332,7 @@ contract PerformanceTests is Test {
     function test_stress_mixed_operations() public {
         FacetsPrepare.ensureAndSync(NAME_EXAMPLE);
         _setupStorageConfig();
-        
+
         diamond = DiamondUpgrades.deployDiamond(
             NAME_EXAMPLE,
             DiamondUpgrades.DeployOpts({
@@ -352,7 +352,7 @@ contract PerformanceTests is Test {
             } else {
                 IStorageFacet(diamond).setValue(i * 10);
             }
-            
+
             // Verify state after each operation
             uint256 currentValue = IViewFacet(diamond).get();
             assertTrue(currentValue >= 0, "Invalid state detected");
@@ -378,17 +378,7 @@ contract PerformanceTests is Test {
 
     function _setupStorageConfig() internal {
         StorageInit.NamespaceSeed[] memory seeds = new StorageInit.NamespaceSeed[](1);
-        seeds[0] = StorageInit.NamespaceSeed({
-            namespaceId: NS_ID,
-            version: 1,
-            artifact: LIB_ART,
-            libraryName: LIB_NAME
-        });
-        StorageInit.ensure({
-            name: NAME_EXAMPLE,
-            seeds: seeds,
-            appendOnlyPolicy: true,
-            allowDualWrite: false
-        });
+        seeds[0] = StorageInit.NamespaceSeed({namespaceId: NS_ID, version: 1, artifact: LIB_ART, libraryName: LIB_NAME});
+        StorageInit.ensure({name: NAME_EXAMPLE, seeds: seeds, appendOnlyPolicy: true, allowDualWrite: false});
     }
 }
