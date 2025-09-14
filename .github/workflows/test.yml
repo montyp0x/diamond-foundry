@@ -36,5 +36,5 @@ jobs:
 
       - name: Run tests
         run: |
-          bash +x scripts/run_all_scenarios.sh
+          bash -x scripts/run_all_scenarios.sh
         id: test
