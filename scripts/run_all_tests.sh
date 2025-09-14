@@ -23,10 +23,10 @@ run_test_suite() {
     echo "=========================================="
     
     if forge test --match-test "$test_pattern" -vv; then
-        echo "✅ $suite_name PASSED"
+        echo "$suite_name PASSED"
         ((total_passed++))
     else
-        echo "❌ $suite_name FAILED"
+        echo "$suite_name FAILED"
         ((total_failed++))
     fi
     
@@ -37,10 +37,10 @@ run_test_suite() {
 echo "=== DETERMINISTIC SCENARIOS ==="
 ./scripts/run_all_scenarios.sh
 if [ $? -eq 0 ]; then
-    echo "✅ Deterministic Scenarios PASSED"
+    echo "Deterministic Scenarios PASSED"
     ((total_passed++))
 else
-    echo "❌ Deterministic Scenarios FAILED"
+    echo "Deterministic Scenarios FAILED"
     ((total_failed++))
 fi
 echo
@@ -64,10 +64,10 @@ run_test_suite "Edge Case Tests" "test_edge_case_|test_boundary_conditions_"
 # Run all tests together
 echo "=== COMPREHENSIVE TEST RUN ==="
 if forge test -vv; then
-    echo "✅ All Tests PASSED"
+    echo "All Tests PASSED"
     ((total_passed++))
 else
-    echo "❌ Some Tests FAILED"
+    echo "Some Tests FAILED"
     ((total_failed++))
 fi
 
@@ -80,9 +80,9 @@ echo "Test Suites Failed: $total_failed"
 echo "Total Test Suites: $((total_passed + total_failed))"
 
 if [ $total_failed -eq 0 ]; then
-    echo "🎉 All test suites passed!"
+    echo "All test suites passed!"
     exit 0
 else
-    echo "💥 Some test suites failed!"
+    echo "Some test suites failed!"
     exit 1
 fi

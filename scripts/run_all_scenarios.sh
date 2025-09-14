@@ -44,10 +44,10 @@ for scenario_info in "${scenarios[@]}"; do
     echo "=========================================="
     
     if ./scripts/run_scenario.sh "test/scenarios/$scenario_file" "$test_pattern"; then
-        echo "✅ Scenario $scenario_file PASSED"
+        echo "Scenario $scenario_file PASSED"
         ((passed++))
     else
-        echo "❌ Scenario $scenario_file FAILED"
+        echo "Scenario $scenario_file FAILED"
         ((failed++))
     fi
     
