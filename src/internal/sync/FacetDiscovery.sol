@@ -12,31 +12,18 @@ import {FacetSync} from "../sync/FacetSync.sol";
 library FacetDiscovery {
     using StringUtils for string;
 
-    Vm internal constant vm = Vm(Utils.CHEATCODE_ADDRESS);
+    Vm internal constant VM = Vm(Utils.CHEATCODE_ADDRESS);
 
-    struct Options {
-        bool overwrite; // перезаписать facets.json, если уже есть
-        bool autoSync; // сразу FacetSync.syncSelectors(name)
-        bool inferUsesFromTags; // читать // @uses <ns> из исходника
-        bool fallbackSingleNamespace; // если в storage.json один ns — подставить
-    }
-
-    /// @notice Сканирует src/<name>/facets/**.sol, находит их контракты в out/, пишет facets.json и (опц.) синкает селекторы.
-    function discoverAndWrite(string memory name, Options memory opt) internal {
-        string memory root = vm.projectRoot(); // якорим всё на корень пользователя
-        string memory facetsPath = string.concat(root, "/.diamond-upgrades/", name, "/facets.json");
-        if (!opt.overwrite) {
-            try vm.readFile(facetsPath) {
-                return;
-            } catch {}
-        }
+    /// @notice Сканирует src/<name>/facets/**.sol, находит их контракты в out/, пишет facets.json и синкает селекторы.
+    function discoverAndWrite(string memory name) internal {
+        // Всегда перезаписываем файл (overwrite = true)
 
         // 1) список исходников из src/<name>/facets/**/*.sol командой find
         string[] memory srcFiles = _listSources(name);
 
         // 2) собрать Facet[]: по каждому .sol найти соответствующие артефакты из out/<File>.sol/*.json,
         //    отфильтровать по .sourceName == src/<name>/facets/.../<File>.sol
-        DesiredFacetsIO.Facet[] memory facets = _collectFacets(name, srcFiles, opt);
+        DesiredFacetsIO.Facet[] memory facets = _collectFacets(name, srcFiles);
 
         // 3) записать facets.json
         DesiredFacetsIO.DesiredState memory d;
@@ -45,17 +32,15 @@ library FacetDiscovery {
         d.facets = facets;
         DesiredFacetsIO.save(d);
 
-        // 4) синк селекторов
-        if (opt.autoSync) {
-            FacetSync.syncSelectors(name);
-        }
+        // 4) всегда синкать селекторы (autoSync = true)
+        FacetSync.syncSelectors(name);
     }
 
     // ───────────────────────────────────────────────────────────────────────────
 
     function _listSources(string memory name) private returns (string[] memory list) {
         // find "src/<name>/facets" -type f -name "*.sol" (recursive search) - ТОЛЬКО в юзерском проекте
-        string memory root = vm.projectRoot();
+        string memory root = VM.projectRoot();
         string memory srcDirAbs = string.concat(root, "/src/", name, "/facets");
 
         string[] memory cmd = new string[](3);
@@ -63,12 +48,12 @@ library FacetDiscovery {
         cmd[1] = "-lc";
         cmd[2] = string.concat("find ", _quote(srcDirAbs), " -type f -name '*.sol' || true");
 
-        Vm.FfiResult memory r = vm.tryFfi(cmd);
+        Vm.FfiResult memory r = VM.tryFfi(cmd);
         if (r.exitCode != 0 && r.stdout.length == 0) return new string[](0);
 
         string memory out = string(r.stdout);
         if (bytes(out).length == 0) return new string[](0);
-        list = vm.split(out, "\n");
+        list = VM.split(out, "\n");
         // убрать пустую последнюю строку
         if (list.length > 0 && bytes(list[list.length - 1]).length == 0) {
             string[] memory trimmed = new string[](list.length - 1);
@@ -79,19 +64,19 @@ library FacetDiscovery {
         }
     }
 
-    function _collectFacets(string memory name, string[] memory srcFiles, Options memory opt)
+    function _collectFacets(string memory, /* name */ string[] memory srcFiles)
         private
         returns (DesiredFacetsIO.Facet[] memory out)
     {
-        // fallback: если один namespace — используем его
-        string[] memory fallbackNs = _getFallbackNamespaces(name, opt);
+        // fallback: пустой массив (fallbackSingleNamespace убран)
+        string[] memory fallbackNs = new string[](0);
 
         // грубая верхняя граница: максимум по числу обнаруженных src-файлов * N контрактов в файле
         DesiredFacetsIO.Facet[] memory buf = new DesiredFacetsIO.Facet[](srcFiles.length * 4);
         uint256 w = 0;
 
         for (uint256 i = 0; i < srcFiles.length; i++) {
-            w = _processSourceFile(srcFiles[i], fallbackNs, opt, buf, w);
+            w = _processSourceFile(srcFiles[i], fallbackNs, buf, w);
         }
 
         // trim
@@ -101,21 +86,9 @@ library FacetDiscovery {
         }
     }
 
-    function _getFallbackNamespaces(string memory name, Options memory opt)
-        private
-        view
-        returns (string[] memory fallbackNs)
-    {
-        fallbackNs = new string[](0);
-        if (opt.fallbackSingleNamespace) {
-            fallbackNs = _singleNs(name);
-        }
-    }
-
     function _processSourceFile(
         string memory src,
         string[] memory fallbackNs,
-        Options memory opt,
         DesiredFacetsIO.Facet[] memory buf,
         uint256 w
     ) private returns (uint256 newW) {
@@ -126,7 +99,7 @@ library FacetDiscovery {
 
         newW = w;
         for (uint256 j = 0; j < artifacts.length; j++) {
-            DesiredFacetsIO.Facet memory facet = _createFacetFromArtifact(artifacts[j], src, fallbackNs, opt);
+            DesiredFacetsIO.Facet memory facet = _createFacetFromArtifact(artifacts[j], src, fallbackNs);
             if (bytes(facet.artifact).length > 0) {
                 buf[newW++] = facet;
             }
@@ -135,7 +108,7 @@ library FacetDiscovery {
 
     function _getArtifactsForSource(string memory src) private returns (string[] memory artifacts) {
         // Сканируем артефакты ИМЕННО из user out/
-        string memory root = vm.projectRoot();
+        string memory root = VM.projectRoot();
         string memory outDir = Utils.getOutDir();
         string memory outAbs = string.concat(root, "/", outDir);
         string memory fileSol = _basename(src);
@@ -146,7 +119,7 @@ library FacetDiscovery {
         cmd[1] = "-lc";
         cmd[2] = string.concat("find ", _quote(dir), " -type f -name '*.json' || true");
 
-        Vm.FfiResult memory r = vm.tryFfi(cmd);
+        Vm.FfiResult memory r = VM.tryFfi(cmd);
         if (r.exitCode != 0 && r.stdout.length == 0) {
             return new string[](0);
         }
@@ -156,7 +129,7 @@ library FacetDiscovery {
             return new string[](0);
         }
 
-        artifacts = vm.split(outList, "\n");
+        artifacts = VM.split(outList, "\n");
         if (artifacts.length > 0 && bytes(artifacts[artifacts.length - 1]).length == 0) {
             string[] memory trimmed = new string[](artifacts.length - 1);
             for (uint256 k = 0; k < trimmed.length; k++) {
@@ -166,18 +139,16 @@ library FacetDiscovery {
         }
     }
 
-    function _createFacetFromArtifact(
-        string memory ap,
-        string memory src,
-        string[] memory fallbackNs,
-        Options memory opt
-    ) private returns (DesiredFacetsIO.Facet memory facet) {
+    function _createFacetFromArtifact(string memory ap, string memory src, string[] memory fallbackNs)
+        private
+        returns (DesiredFacetsIO.Facet memory facet)
+    {
         if (bytes(ap).length == 0 || !_endsWith(ap, ".json")) {
             return facet; // empty facet
         }
 
         string memory json;
-        try vm.readFile(ap) returns (string memory fileContent) {
+        try VM.readFile(ap) returns (string memory fileContent) {
             json = fileContent;
         } catch {
             return facet; // empty facet
@@ -185,7 +156,7 @@ library FacetDiscovery {
 
         // Фильтр по sourceName: пропускаем ТОЛЬКО src/<name>/facets/...
         // Извлекаем относительный путь от корня проекта
-        string memory root = vm.projectRoot();
+        string memory root = VM.projectRoot();
         string memory relativeSrc = src;
         if (src.startsWith(root)) {
             // Убираем префикс projectRoot + "/"
@@ -207,14 +178,13 @@ library FacetDiscovery {
         string memory artifactId = string.concat(fileSol, ":", contractName);
 
         string[] memory uses = fallbackNs;
-        if (opt.inferUsesFromTags) {
-            // Если читаем исходник для @uses — только из user src (абсолютный путь)
-            string memory srcAbs = string.concat(root, "/", relativeSrc);
-            try vm.readFile(srcAbs) returns (string memory srcCode) {
-                string[] memory tags = _extractUsesTags(srcCode);
-                if (tags.length > 0) uses = tags;
-            } catch {}
-        }
+        // Всегда читаем @uses теги из исходника (inferUsesFromTags = true)
+        // Если читаем исходник для @uses — только из user src (абсолютный путь)
+        string memory srcAbs = string.concat(root, "/", relativeSrc);
+        try VM.readFile(srcAbs) returns (string memory srcCode) {
+            string[] memory tags = _extractUsesTags(srcCode);
+            if (tags.length > 0) uses = tags;
+        } catch {}
 
         facet = DesiredFacetsIO.Facet({artifact: artifactId, selectors: new bytes4[](0), uses: uses});
     }

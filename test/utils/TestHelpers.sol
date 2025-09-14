@@ -216,16 +216,9 @@ library TestHelpers {
         internal
         returns (DesiredFacetsIO.DesiredState memory d)
     {
-        // Use the new FacetDiscovery with default options
-        FacetDiscovery.Options memory opts = FacetDiscovery.Options({
-            overwrite: false, // Don't overwrite existing files
-            autoSync: false, // Don't auto-sync selectors
-            inferUsesFromTags: true, // Parse @uses tags from source code
-            fallbackSingleNamespace: true // Use single namespace from storage.json as fallback
-        });
-
+        // Use the new FacetDiscovery (all options are now constants)
         // This will discover facets and save them to facets.json
-        FacetDiscovery.discoverAndWrite(name, opts);
+        FacetDiscovery.discoverAndWrite(name);
 
         // Load the discovered facets
         return DesiredFacetsIO.load(name);

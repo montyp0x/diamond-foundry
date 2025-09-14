@@ -184,14 +184,7 @@ library FacetSync {
             return;
         } catch {
             // File doesn't exist, auto-discover facets using the new FacetDiscovery
-            FacetDiscovery.Options memory opts = FacetDiscovery.Options({
-                overwrite: false, // Don't overwrite existing files
-                autoSync: true, // Auto-sync selectors
-                inferUsesFromTags: true, // Parse @uses tags from source code
-                fallbackSingleNamespace: true // Use single namespace from storage.json as fallback
-            });
-
-            FacetDiscovery.discoverAndWrite(name, opts);
+            FacetDiscovery.discoverAndWrite(name);
         }
     }
 }
