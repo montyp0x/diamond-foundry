@@ -239,7 +239,7 @@ library ManifestIO {
 
     function findFacetByArtifact(ChainState memory s, string memory artifact) internal pure returns (bool, uint256) {
         bytes32 k;
-        assembly {
+        assembly ("memory-safe") {
             k := keccak256(add(artifact, 0x20), mload(artifact))
         }
         for (uint256 i = 0; i < s.facets.length; i++) {
@@ -257,7 +257,7 @@ library ManifestIO {
 
     function findNamespace(ChainState memory s, string memory nsId) internal pure returns (bool, uint256) {
         bytes32 k;
-        assembly {
+        assembly ("memory-safe") {
             k := keccak256(add(nsId, 0x20), mload(nsId))
         }
         for (uint256 i = 0; i < s.namespaces.length; i++) {
@@ -293,7 +293,7 @@ library ManifestIO {
             );
         }
         bytes32 result;
-        assembly {
+        assembly ("memory-safe") {
             result := keccak256(add(acc, 0x20), mload(acc))
         }
         return result;

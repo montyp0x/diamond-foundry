@@ -122,7 +122,7 @@ library UpgradeRunner {
     function _hasExplicitLoupeFacet(DesiredFacetsIO.DesiredState memory desired) private pure returns (bool) {
         string memory loupeArtifact = "DiamondLoupeFacet.sol:DiamondLoupeFacet";
         bytes32 key;
-        assembly {
+        assembly ("memory-safe") {
             key := keccak256(add(loupeArtifact, 0x20), mload(loupeArtifact))
         }
         for (uint256 i = 0; i < desired.facets.length; i++) {

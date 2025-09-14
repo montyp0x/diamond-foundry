@@ -26,7 +26,7 @@ library FacetsPrepare {
     function ensureAndSync(string memory name) internal {
         // ensure dir
         string memory root = VM.projectRoot();
-        string memory dir  = string.concat(root, "/.diamond-upgrades/", name);
+        string memory dir = string.concat(root, "/.diamond-upgrades/", name);
         try VM.createDir(dir, true) {} catch {}
 
         // 1) ensure storage.json (minimal) — only if missing
@@ -48,12 +48,7 @@ library FacetsPrepare {
     function _writeEmptyStorage(string memory name) private {
         // minimal empty config via StorageInit.ensure
         StorageInit.NamespaceSeed[] memory seeds = new StorageInit.NamespaceSeed[](0);
-        StorageInit.ensure({
-            name: name,
-            seeds: seeds,
-            appendOnlyPolicy: true,
-            allowDualWrite: false
-        });
+        StorageInit.ensure({name: name, seeds: seeds, appendOnlyPolicy: true, allowDualWrite: false});
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
@@ -64,8 +59,8 @@ library FacetsPrepare {
         string[] memory srcFiles = _listSources(name);
 
         DesiredFacetsIO.DesiredState memory d;
-        d.name   = name;
-        d.init   = DesiredFacetsIO.InitSpec({target: address(0), data: ""});
+        d.name = name;
+        d.init = DesiredFacetsIO.InitSpec({target: address(0), data: ""});
         d.facets = _collectFacets(name, srcFiles);
 
         DesiredFacetsIO.save(d);
@@ -89,7 +84,9 @@ library FacetsPrepare {
         list = VM.split(out, "\n");
         if (list.length > 0 && bytes(list[list.length - 1]).length == 0) {
             string[] memory trimmed = new string[](list.length - 1);
-            for (uint256 i = 0; i < trimmed.length; i++) trimmed[i] = list[i];
+            for (uint256 i = 0; i < trimmed.length; i++) {
+                trimmed[i] = list[i];
+            }
             list = trimmed;
         }
     }
@@ -106,15 +103,15 @@ library FacetsPrepare {
         }
 
         out = new DesiredFacetsIO.Facet[](w);
-        for (uint256 t = 0; t < w; t++) out[t] = buf[t];
+        for (uint256 t = 0; t < w; t++) {
+            out[t] = buf[t];
+        }
     }
 
-    function _processSourceFile(
-        string memory src,
-        DesiredFacetsIO.Facet[] memory buf,
-        uint256 w,
-        string memory name
-    ) private returns (uint256 newW) {
+    function _processSourceFile(string memory src, DesiredFacetsIO.Facet[] memory buf, uint256 w, string memory name)
+        private
+        returns (uint256 newW)
+    {
         if (bytes(src).length == 0) return w;
 
         string[] memory artifacts = _getArtifactsForSource(src);
@@ -144,12 +141,12 @@ library FacetsPrepare {
 
     function _getArtifactsForSource(string memory src) private returns (string[] memory artifacts) {
         // artifacts live in <projectRoot>/<out>/<File>.sol/*.json
-        string memory root   = VM.projectRoot();
+        string memory root = VM.projectRoot();
         string memory outDir = Utils.getOutDir();
         string memory outAbs = string.concat(root, "/", outDir);
 
         string memory fileSol = src.basename();
-        string memory dir     = string.concat(outAbs, "/", fileSol);
+        string memory dir = string.concat(outAbs, "/", fileSol);
 
         string[] memory cmd = new string[](3);
         cmd[0] = "bash";
@@ -165,38 +162,37 @@ library FacetsPrepare {
         artifacts = VM.split(outList, "\n");
         if (artifacts.length > 0 && bytes(artifacts[artifacts.length - 1]).length == 0) {
             string[] memory trimmed = new string[](artifacts.length - 1);
-            for (uint256 k = 0; k < trimmed.length; k++) trimmed[k] = artifacts[k];
+            for (uint256 k = 0; k < trimmed.length; k++) {
+                trimmed[k] = artifacts[k];
+            }
             artifacts = trimmed;
         }
     }
 
-    function _createFacetFromArtifact(
-        string memory artifactJsonPathAbs,
-        string memory srcAbs
-    ) private returns (DesiredFacetsIO.Facet memory facet)
+    function _createFacetFromArtifact(string memory artifactJsonPathAbs, string memory srcAbs)
+        private
+        returns (DesiredFacetsIO.Facet memory facet)
     {
         if (bytes(artifactJsonPathAbs).length == 0 || !artifactJsonPathAbs.endsWith(".json")) return facet;
 
         string memory json;
-        try VM.readFile(artifactJsonPathAbs) returns (string memory fileContent) { json = fileContent; } catch {
+        try VM.readFile(artifactJsonPathAbs) returns (string memory fileContent) {
+            json = fileContent;
+        } catch {
             return facet;
         }
 
         // We already filtered by path in _processSourceFile, so we can skip sourceName check
 
         // Build artifact id: "<File>.sol:<Contract>"
-        string memory fileSol     = srcAbs.basename();
-        string memory contractName= artifactJsonPathAbs.basename().chopSuffix(".json");
-        string memory artifactId  = string.concat(fileSol, ":", contractName);
+        string memory fileSol = srcAbs.basename();
+        string memory contractName = artifactJsonPathAbs.basename().chopSuffix(".json");
+        string memory artifactId = string.concat(fileSol, ":", contractName);
 
         // uses — from // @uses tags inside source (optional)
         string[] memory uses = _extractUsesTags(VM.readFile(srcAbs));
 
-        facet = DesiredFacetsIO.Facet({
-            artifact:  artifactId,
-            selectors: new bytes4[](0),
-            uses:      uses
-        });
+        facet = DesiredFacetsIO.Facet({artifact: artifactId, selectors: new bytes4[](0), uses: uses});
     }
 
     // // @uses <ns> parser (line-based)
@@ -206,7 +202,8 @@ library FacetsPrepare {
         uint256 w;
         for (uint256 i = 0; i + 7 < b.length; i++) {
             if (b[i] == "/" && b[i + 1] == "/") {
-                uint256 j = i; while (j < b.length && b[j] != "\n") j++;
+                uint256 j = i;
+                while (j < b.length && b[j] != "\n") j++;
                 string memory line = string(StringUtils.slice(b, i, j - i));
                 if (line.contains("@uses")) {
                     string memory ns = line.lastToken();
@@ -219,7 +216,9 @@ library FacetsPrepare {
             }
         }
         out = new string[](w);
-        for (uint256 k = 0; k < w; k++) out[k] = tmp[k];
+        for (uint256 k = 0; k < w; k++) {
+            out[k] = tmp[k];
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────────
@@ -232,9 +231,8 @@ library FacetsPrepare {
         for (uint256 i = 0; i < d.facets.length; i++) {
             (string memory fileSol, string memory contractName) = _splitArtifact(d.facets[i].artifact);
 
-            string memory jsonPath = string.concat(
-                VM.projectRoot(), "/", Utils.getOutDir(), "/", fileSol, "/", contractName, ".json"
-            );
+            string memory jsonPath =
+                string.concat(VM.projectRoot(), "/", Utils.getOutDir(), "/", fileSol, "/", contractName, ".json");
 
             string memory raw = VM.readFile(jsonPath);
             bytes4[] memory sels = _selectorsFromAbi(raw);
@@ -264,7 +262,11 @@ library FacetsPrepare {
                 for (uint256 j = 0;; j++) {
                     string memory ip = string.concat(base, ".inputs[", j.toString(), "].type");
                     string memory tIn;
-                    try VM.parseJsonString(raw, ip) returns (string memory t) { tIn = t; } catch { break; }
+                    try VM.parseJsonString(raw, ip) returns (string memory t) {
+                        tIn = t;
+                    } catch {
+                        break;
+                    }
                     if (!first) sig = string.concat(sig, ",");
                     sig = string.concat(sig, tIn);
                     first = false;
@@ -289,24 +291,35 @@ library FacetsPrepare {
         bytes memory b = bytes(artifact);
         uint256 p = b.length;
         for (uint256 i = 0; i < b.length; i++) {
-            if (b[i] == ":") { p = i; break; }
+            if (b[i] == ":") {
+                p = i;
+                break;
+            }
         }
         require(p != b.length && p > 0, "FacetsPrepare: bad artifact");
 
         bytes memory L = new bytes(p);
-        for (uint256 i2 = 0; i2 < p; i2++) L[i2] = b[i2];
+        for (uint256 i2 = 0; i2 < p; i2++) {
+            L[i2] = b[i2];
+        }
 
         bytes memory R = new bytes(b.length - p - 1);
-        for (uint256 j = 0; j < R.length; j++) R[j] = b[p + 1 + j];
+        for (uint256 j = 0; j < R.length; j++) {
+            R[j] = b[p + 1 + j];
+        }
 
         // normalize left to basename
         bytes memory lb = L;
         int256 lastSlash = -1;
-        for (uint256 k = 0; k < lb.length; k++) if (lb[k] == "/") lastSlash = int256(k);
+        for (uint256 k = 0; k < lb.length; k++) {
+            if (lb[k] == "/") lastSlash = int256(k);
+        }
         if (lastSlash >= 0) {
             uint256 start = uint256(lastSlash) + 1;
             bytes memory base = new bytes(lb.length - start);
-            for (uint256 t = 0; t < base.length; t++) base[t] = lb[start + t];
+            for (uint256 t = 0; t < base.length; t++) {
+                base[t] = lb[start + t];
+            }
             leftFile = string(base);
         } else {
             leftFile = string(L);
@@ -317,7 +330,9 @@ library FacetsPrepare {
     function _append(bytes4[] memory arr, bytes4 v) private pure returns (bytes4[] memory out) {
         uint256 n = arr.length;
         out = new bytes4[](n + 1);
-        for (uint256 i = 0; i < n; i++) out[i] = arr[i];
+        for (uint256 i = 0; i < n; i++) {
+            out[i] = arr[i];
+        }
         out[n] = v;
     }
 
@@ -329,15 +344,24 @@ library FacetsPrepare {
             bytes4 s = arr[i];
             bool seen = false;
             for (uint256 j = 0; j < w; j++) {
-                if (tmp[j] == s) { seen = true; break; }
+                if (tmp[j] == s) {
+                    seen = true;
+                    break;
+                }
             }
             if (!seen) tmp[w++] = s;
         }
         out = new bytes4[](w);
-        for (uint256 k = 0; k < w; k++) out[k] = tmp[k];
+        for (uint256 k = 0; k < w; k++) {
+            out[k] = tmp[k];
+        }
     }
 
     function _exists(string memory absPath) private view returns (bool) {
-        try VM.readFile(absPath) returns (string memory) { return true; } catch { return false; }
+        try VM.readFile(absPath) returns (string memory) {
+            return true;
+        } catch {
+            return false;
+        }
     }
 }

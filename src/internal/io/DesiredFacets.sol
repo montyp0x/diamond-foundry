@@ -125,7 +125,7 @@ library DesiredFacetsIO {
         returns (bool found, uint256 index)
     {
         bytes32 key;
-        assembly {
+        assembly ("memory-safe") {
             key := keccak256(add(artifact, 0x20), mload(artifact))
         }
         for (uint256 i = 0; i < d.facets.length; i++) {

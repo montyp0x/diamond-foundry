@@ -86,7 +86,7 @@ library ManifestApply {
 
     function _resolve(CutPlanner.FacetAddr[] memory targets, string memory artifact) private pure returns (address) {
         bytes32 key;
-        assembly {
+        assembly ("memory-safe") {
             key := keccak256(add(artifact, 0x20), mload(artifact))
         }
         for (uint256 i = 0; i < targets.length; i++) {
@@ -132,7 +132,7 @@ library ManifestApply {
         }
 
         // If we allocated more than we filled (shouldn't happen), trim
-        assembly {
+        assembly ("memory-safe") {
             mstore(out, w)
         }
     }

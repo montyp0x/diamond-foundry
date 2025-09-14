@@ -99,7 +99,7 @@ library StorageConfigIO {
     // ── Lookup helpers ──────────────────────────────────────────────────────────
     function find(StorageConfig memory cfg, string memory nsId) internal pure returns (bool, uint256) {
         bytes32 k;
-        assembly {
+        assembly ("memory-safe") {
             k := keccak256(add(nsId, 0x20), mload(nsId))
         }
         for (uint256 i = 0; i < cfg.namespaces.length; i++) {

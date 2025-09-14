@@ -22,61 +22,15 @@ import {IERC173} from "src/interfaces/diamond/IERC173.sol";
 
 // ─── Local fixtures (compiled вместе с тестом) ─────────────────────────────────
 
-/// @dev Adds a new function not существующая в изначальном наборе.
-contract PlusOneFacet {
-    function plusOne() external returns (uint256) {
-        LibCounterStorage.Layout storage cs = LibCounterStorage.layout();
-        unchecked {
-            cs.value += 1;
-        }
-        return cs.value;
-    }
-}
+// PlusOneFacet теперь в src/example/facets/test/PlusOneFacet.sol
 
-/// @dev Версия AddFacet с теми же селекторами (increment/reset), но другим поведением.
-/// increment(by) теперь добавляет +1 extra, чтобы легко отличить Replace.
-contract AddFacetV2 {
-    event Incremented(uint256 newValue);
-    event Reset(uint256 oldValue);
+// AddFacetV2 теперь в src/example/facets/test/AddFacetV2.sol
 
-    function increment(uint256 by) external {
-        LibCounterStorage.Layout storage cs = LibCounterStorage.layout();
-        unchecked {
-            cs.value += (by + 1);
-        } // поведение v2
-        emit Incremented(cs.value);
-    }
+// EvilFacet теперь в src/example/facets/test/EvilFacet.sol
 
-    function reset() external {
-        LibCounterStorage.Layout storage cs = LibCounterStorage.layout();
-        uint256 old = cs.value;
-        cs.value = 0;
-        emit Reset(old);
-    }
-}
+// BadCollisionFacet теперь в src/example/facets/test/BadCollisionFacet.sol
 
-/// @dev Фасета с произвольным методом; будем ссылаться на несуществующий namespace.
-contract EvilFacet {
-    function ping() external pure returns (uint256) {
-        return 1;
-    }
-}
-
-// конфликтующий фасет, который дублирует селектор increment(uint256)
-contract BadCollisionFacet {
-    event Collide(uint256 x);
-
-    function increment(uint256 by) external {
-        emit Collide(by);
-    } // та же сигнатура, что в AddFacet
-}
-
-// init-фасет: ставит старт в v1
-contract InitFacet {
-    function init(uint256 start) external {
-        LibCounterStorage.layout().value = start;
-    }
-}
+// InitFacet теперь в src/example/facets/test/InitFacet.sol
 
 // ─── Small interfaces для фикстур ──────────────────────────────────────────────
 interface IPlusOne {
@@ -100,12 +54,12 @@ contract AllTests is Test {
     string internal constant LIB_ART = "LibCounterStorage.sol:LibCounterStorage";
     string internal constant LIB_NAME = "LibCounterStorage";
 
-    // Локальные артефакты (из этого файла)
-    string internal constant ART_PLUS1 = "AllTests.t.sol:PlusOneFacet";
-    string internal constant ART_ADDV2 = "AllTests.t.sol:AddFacetV2";
-    string internal constant ART_EVIL = "AllTests.t.sol:EvilFacet";
-    string internal constant ART_BAD = "AllTests.t.sol:BadCollisionFacet";
-    string internal constant ART_INIT = "AllTests.t.sol:InitFacet";
+    // Тестовые артефакты (из src/example/facets/test/)
+    string internal constant ART_PLUS1 = "test/PlusOneFacet.sol:PlusOneFacet";
+    string internal constant ART_ADDV2 = "test/AddFacetV2.sol:AddFacetV2";
+    string internal constant ART_EVIL = "test/EvilFacet.sol:EvilFacet";
+    string internal constant ART_BAD = "_test/BadCollisionFacet.sol:BadCollisionFacet";
+    string internal constant ART_INIT = "test/InitFacet.sol:InitFacet";
 
     function setUp() public {
         // Очищаем тестовый проект

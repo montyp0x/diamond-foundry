@@ -50,7 +50,7 @@ library FacetDeployer {
             if (runtime.length == 0) revert Errors.RuntimeBytecodeEmpty(artifact);
 
             bytes32 rhash;
-            assembly {
+            assembly ("memory-safe") {
                 rhash := keccak256(add(runtime, 0x20), mload(runtime))
             }
             r.runtimeHashes[i] = rhash;

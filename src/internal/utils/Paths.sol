@@ -56,5 +56,4 @@ library Paths {
     function quote(string memory path) internal pure returns (string memory) {
         return string.concat('"', path, '"');
     }
-
 }

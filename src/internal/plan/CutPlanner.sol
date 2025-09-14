@@ -111,7 +111,7 @@ library CutPlanner {
         }
 
         // Trim the ops array to opCount.
-        assembly {
+        assembly ("memory-safe") {
             mstore(ops, opCount)
         }
     }
@@ -202,7 +202,7 @@ library CutPlanner {
 
     function _resolveFacet(FacetAddr[] memory targets, string memory artifact) private pure returns (address) {
         bytes32 key;
-        assembly {
+        assembly ("memory-safe") {
             key := keccak256(add(artifact, 0x20), mload(artifact))
         }
         for (uint256 i = 0; i < targets.length; i++) {
