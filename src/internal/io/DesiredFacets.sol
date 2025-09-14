@@ -35,7 +35,7 @@ library DesiredFacetsIO {
 
     // ── Load ────────────────────────────────────────────────────────────────────
     function load(string memory name) internal view returns (DesiredState memory d) {
-        string memory path = Paths.facetsJson(name);
+        string memory path = Paths.facetsJsonAbs(name);
         string memory raw;
         try VM.readFile(path) returns (string memory data) {
             raw = data;
@@ -72,7 +72,7 @@ library DesiredFacetsIO {
 
     // ── Save (direct pretty JSON build) ─────────────────────────────────────────
     function save(DesiredState memory d) internal {
-        string memory path = Paths.facetsJson(d.name);
+        string memory path = Paths.facetsJsonAbs(d.name);
 
         string memory json = string.concat(
             "{\n",

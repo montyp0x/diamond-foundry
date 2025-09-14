@@ -40,7 +40,7 @@ library StorageConfigIO {
 
     // ── Load (expects our save format) ──────────────────────────────────────────
     function load(string memory name) internal view returns (StorageConfig memory cfg) {
-        string memory path = Paths.storageJson(name);
+        string memory path = Paths.storageJsonAbs(name);
         string memory raw;
         try VM.readFile(path) returns (string memory data) {
             raw = data;
@@ -71,7 +71,7 @@ library StorageConfigIO {
 
     // ── Save (direct pretty JSON build) ─────────────────────────────────────────
     function save(StorageConfig memory cfg) internal {
-        string memory path = Paths.storageJson(cfg.name);
+        string memory path = Paths.storageJsonAbs(cfg.name);
 
         string memory json = string.concat(
             "{\n",

@@ -72,7 +72,7 @@ library ManifestIO {
 
     // ── Load (expects our save format) ──────────────────────────────────────────
     function load(string memory name) internal view returns (Manifest memory m) {
-        string memory path = Paths.manifestJson(name);
+        string memory path = Paths.manifestJsonAbs(name);
         string memory raw;
         try VM.readFile(path) returns (string memory data) {
             raw = data;
@@ -209,7 +209,7 @@ library ManifestIO {
 
     // ── Save (light pretty JSON build) ──────────────────────────────────────────
     function save(Manifest memory m) internal {
-        string memory path = Paths.manifestJson(m.name);
+        string memory path = Paths.manifestJsonAbs(m.name);
 
         string memory json = string.concat(
             "{\n",

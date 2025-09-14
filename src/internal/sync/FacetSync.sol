@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import {Vm} from "forge-std/Vm.sol";
 import {DesiredFacetsIO} from "../io/DesiredFacets.sol";
 import {StringUtils} from "../utils/StringUtils.sol";
+import {Utils} from "../utils/Utils.sol";
 import {FacetDiscovery} from "./FacetDiscovery.sol";
 
 /// @title FacetSync
@@ -22,7 +23,9 @@ library FacetSync {
         for (uint256 i = 0; i < d.facets.length; i++) {
             string memory artifact = d.facets[i].artifact;
             (string memory fileSol, string memory contractName) = _splitArtifact(artifact);
-            string memory jsonPath = string.concat("out/", fileSol, "/", contractName, ".json"); // e.g. out/AddFacet.sol/AddFacet.json
+            string memory root = VM.projectRoot();
+            string memory outDir = Utils.getOutDir();
+            string memory jsonPath = string.concat(root, "/", outDir, "/", fileSol, "/", contractName, ".json"); // e.g. projectRoot/out/AddFacet.sol/AddFacet.json
 
             // read artifact JSON
             string memory raw = VM.readFile(jsonPath);
@@ -172,7 +175,8 @@ library FacetSync {
     /// @notice Auto-discover facets from src/example/ if no facets.json exists
     /// @param name The project name
     function _autoDiscoverFacetsIfNeeded(string memory name) private {
-        string memory facetsPath = string(abi.encodePacked(".diamond-upgrades/", name, "/facets.json"));
+        string memory root = VM.projectRoot();
+        string memory facetsPath = string(abi.encodePacked(root, "/.diamond-upgrades/", name, "/facets.json"));
 
         // Check if facets.json exists
         try VM.readFile(facetsPath) returns (string memory) {

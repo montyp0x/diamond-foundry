@@ -23,7 +23,8 @@ library FacetDiscovery {
 
     /// @notice Сканирует src/<name>/facets/**.sol, находит их контракты в out/, пишет facets.json и (опц.) синкает селекторы.
     function discoverAndWrite(string memory name, Options memory opt) internal {
-        string memory facetsPath = string.concat(".diamond-upgrades/", name, "/facets.json");
+        string memory root = vm.projectRoot(); // якорим всё на корень пользователя
+        string memory facetsPath = string.concat(root, "/.diamond-upgrades/", name, "/facets.json");
         if (!opt.overwrite) {
             try vm.readFile(facetsPath) {
                 return;
@@ -53,17 +54,18 @@ library FacetDiscovery {
     // ───────────────────────────────────────────────────────────────────────────
 
     function _listSources(string memory name) private returns (string[] memory list) {
-        // find "src/<name>/facets" -type f -name "*.sol" (recursive search)
-        string memory root = string.concat("src/", name, "/facets");
-        string[] memory args = new string[](6);
-        args[0] = "find";
-        args[1] = root;
-        args[2] = "-type";
-        args[3] = "f";
-        args[4] = "-name";
-        args[5] = "*.sol";
-        // через Utils.runAsBashCommand
-        Vm.FfiResult memory r = Utils.runAsBashCommand(args);
+        // find "src/<name>/facets" -type f -name "*.sol" (recursive search) - ТОЛЬКО в юзерском проекте
+        string memory root = vm.projectRoot();
+        string memory srcDirAbs = string.concat(root, "/src/", name, "/facets");
+        
+        string[] memory cmd = new string[](3);
+        cmd[0] = "bash";
+        cmd[1] = "-lc";
+        cmd[2] = string.concat("find ", _quote(srcDirAbs), " -type f -name '*.sol' || true");
+        
+        Vm.FfiResult memory r = vm.tryFfi(cmd);
+        if (r.exitCode != 0 && r.stdout.length == 0) return new string[](0);
+        
         string memory out = string(r.stdout);
         if (bytes(out).length == 0) return new string[](0);
         list = vm.split(out, "\n");
@@ -132,19 +134,23 @@ library FacetDiscovery {
     }
 
     function _getArtifactsForSource(string memory src) private returns (string[] memory artifacts) {
+        // Сканируем артефакты ИМЕННО из user out/
+        string memory root = vm.projectRoot();
+        string memory outDir = Utils.getOutDir();
+        string memory outAbs = string.concat(root, "/", outDir);
         string memory fileSol = _basename(src);
-        string memory dir = string.concat(Utils.getOutDir(), "/", fileSol);
+        string memory dir = string.concat(outAbs, "/", fileSol);
 
-        string[] memory args = new string[](3);
-        args[0] = "bash";
-        args[1] = "-c";
-        args[2] = string.concat("ls -1 ", dir, "/*.json 2>/dev/null || true");
-
-        Vm.FfiResult memory r = vm.tryFfi(args);
+        string[] memory cmd = new string[](3);
+        cmd[0] = "bash";
+        cmd[1] = "-lc";
+        cmd[2] = string.concat("find ", _quote(dir), " -type f -name '*.json' || true");
+        
+        Vm.FfiResult memory r = vm.tryFfi(cmd);
         if (r.exitCode != 0 && r.stdout.length == 0) {
             return new string[](0);
         }
-
+        
         string memory outList = string(r.stdout);
         if (bytes(outList).length == 0) {
             return new string[](0);
@@ -167,21 +173,33 @@ library FacetDiscovery {
         Options memory opt
     ) private returns (DesiredFacetsIO.Facet memory facet) {
         if (bytes(ap).length == 0 || !_endsWith(ap, ".json")) {
-            return facet;
-            // empty facet
+            return facet; // empty facet
         }
 
         string memory json;
         try vm.readFile(ap) returns (string memory fileContent) {
             json = fileContent;
         } catch {
-            return facet;
-            // empty facet
+            return facet; // empty facet
         }
 
-        if (!json.contains(src)) {
-            return facet;
-            // empty facet
+        // Фильтр по sourceName: пропускаем ТОЛЬКО src/<name>/facets/...
+        // Извлекаем относительный путь от корня проекта
+        string memory root = vm.projectRoot();
+        string memory relativeSrc = src;
+        if (src.startsWith(root)) {
+            // Убираем префикс projectRoot + "/"
+            bytes memory srcBytes = bytes(src);
+            bytes memory rootBytes = bytes(root);
+            if (srcBytes.length > rootBytes.length + 1 && srcBytes[rootBytes.length] == "/") {
+                relativeSrc = string(_slice(srcBytes, rootBytes.length + 1, srcBytes.length - rootBytes.length - 1));
+            }
+        }
+        
+        // Проверяем, что sourceName начинается с src/<name>/facets/
+        string memory srcPrefix = string.concat("src/", _extractProjectName(src), "/facets/");
+        if (!relativeSrc.startsWith(srcPrefix)) {
+            return facet; // empty facet - это не наш файл
         }
 
         string memory fileSol = _basename(src);
@@ -190,7 +208,9 @@ library FacetDiscovery {
 
         string[] memory uses = fallbackNs;
         if (opt.inferUsesFromTags) {
-            try vm.readFile(src) returns (string memory srcCode) {
+            // Если читаем исходник для @uses — только из user src (абсолютный путь)
+            string memory srcAbs = string.concat(root, "/", relativeSrc);
+            try vm.readFile(srcAbs) returns (string memory srcCode) {
                 string[] memory tags = _extractUsesTags(srcCode);
                 if (tags.length > 0) uses = tags;
             } catch {}
@@ -303,5 +323,47 @@ library FacetDiscovery {
         for (uint256 i = 0; i < a.length; i++) {
             b[i] = a[i];
         }
+    }
+
+    // ── Вспомогательные функции для работы с путями ──────────────────────────────
+    
+    function _quote(string memory path) private pure returns (string memory) {
+        return string.concat('"', path, '"');
+    }
+
+    function _extractProjectName(string memory src) private pure returns (string memory) {
+        // Извлекаем имя проекта из пути src/<name>/facets/...
+        bytes memory srcBytes = bytes(src);
+        uint256 start = 0;
+        uint256 end = 0;
+        
+        // Находим начало после "src/"
+        for (uint256 i = 0; i < srcBytes.length - 4; i++) {
+            if (srcBytes[i] == 's' && srcBytes[i+1] == 'r' && srcBytes[i+2] == 'c' && srcBytes[i+3] == '/') {
+                start = i + 4;
+                break;
+            }
+        }
+        
+        if (start == 0) return "";
+        
+        // Находим конец перед "/facets/"
+        for (uint256 i = start; i < srcBytes.length - 8; i++) {
+            if (srcBytes[i] == '/' && 
+                srcBytes[i+1] == 'f' && srcBytes[i+2] == 'a' && srcBytes[i+3] == 'c' &&
+                srcBytes[i+4] == 'e' && srcBytes[i+5] == 't' && srcBytes[i+6] == 's' && srcBytes[i+7] == '/') {
+                end = i;
+                break;
+            }
+        }
+        
+        if (end == 0) return "";
+        
+        bytes memory result = new bytes(end - start);
+        for (uint256 i = 0; i < result.length; i++) {
+            result[i] = srcBytes[start + i];
+        }
+        
+        return string(result);
     }
 }
