@@ -45,10 +45,10 @@ for scenario_info in "${scenarios[@]}"; do
     
     if ./scripts/run_scenario.sh "test/scenarios/$scenario_file" "$test_pattern"; then
         echo "Scenario $scenario_file PASSED"
-        ((passed++))
+        passed=$((passed + 1))
     else
         echo "Scenario $scenario_file FAILED"
-        ((failed++))
+        failed=$((failed + 1))
     fi
     
     echo
@@ -62,9 +62,9 @@ echo "Failed: $failed"
 echo "Total:  $((passed + failed))"
 
 if [ $failed -eq 0 ]; then
-    echo "🎉 All scenarios passed!"
+    echo "All scenarios passed!"
     exit 0
 else
-    echo "💥 Some scenarios failed!"
+    echo "Some scenarios failed!"
     exit 1
 fi
