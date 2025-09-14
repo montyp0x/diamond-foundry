@@ -17,7 +17,7 @@ library LibCounterStorage {
     /// @notice Accessor to the storage layout at the fixed slot.
     function layout() internal pure returns (Layout storage l) {
         bytes32 slot = COUNTER_STORAGE_SLOT;
-        assembly {
+        assembly ("memory-safe") {
             l.slot := slot
         }
     }
