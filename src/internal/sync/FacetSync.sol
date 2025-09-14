@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import {Vm} from "forge-std/Vm.sol";
 import {DesiredFacetsIO} from "../io/DesiredFacets.sol";
 import {StringUtils} from "../utils/StringUtils.sol";
-import {FacetDiscovery} from "../utils/FacetDiscovery.sol";
+import {FacetDiscovery} from "./FacetDiscovery.sol";
 
 /// @title FacetSync
 /// @notice Sync desired facets' selectors from compiled artifact ABIs in `out/`.
@@ -179,10 +179,15 @@ library FacetSync {
             // File exists, do nothing
             return;
         } catch {
-            // File doesn't exist, auto-discover facets
-            // Use "counter.v1" as default namespace for example facets
-            DesiredFacetsIO.DesiredState memory d = FacetDiscovery.discoverExampleFacets(name, "counter.v1");
-            DesiredFacetsIO.save(d);
+            // File doesn't exist, auto-discover facets using the new FacetDiscovery
+            FacetDiscovery.Options memory opts = FacetDiscovery.Options({
+                overwrite: false, // Don't overwrite existing files
+                autoSync: true, // Auto-sync selectors
+                inferUsesFromTags: true, // Parse @uses tags from source code
+                fallbackSingleNamespace: true // Use single namespace from storage.json as fallback
+            });
+
+            FacetDiscovery.discoverAndWrite(name, opts);
         }
     }
 }

@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import {DesiredFacetsIO} from "src/internal/io/DesiredFacets.sol";
 import {StorageConfigIO} from "src/internal/io/StorageConfig.sol";
-import {FacetDiscovery} from "src/internal/utils/FacetDiscovery.sol";
+import {FacetDiscovery} from "src/internal/sync/FacetDiscovery.sol";
 
 /// @title TestHelpers
 /// @notice Common utility functions for diamond upgrade tests
@@ -209,15 +209,25 @@ library TestHelpers {
     // Automatic facet discovery utilities
     // ─────────────────────────────────────────────────────────────────────────────
 
-    /// @notice Automatically creates a DesiredState by discovering facets from src/example/
+    /// @notice Automatically creates a DesiredState by discovering facets from src/{name}/
     /// @param name The project name
-    /// @param namespace The namespace to use for all discovered facets
     /// @return d The DesiredState with all discovered facets
-    function createDesiredStateFromExample(string memory name, string memory namespace)
+    function createDesiredStateFromExample(string memory name)
         internal
-        view
         returns (DesiredFacetsIO.DesiredState memory d)
     {
-        return FacetDiscovery.discoverExampleFacets(name, namespace);
+        // Use the new FacetDiscovery with default options
+        FacetDiscovery.Options memory opts = FacetDiscovery.Options({
+            overwrite: false, // Don't overwrite existing files
+            autoSync: false, // Don't auto-sync selectors
+            inferUsesFromTags: true, // Parse @uses tags from source code
+            fallbackSingleNamespace: true // Use single namespace from storage.json as fallback
+        });
+
+        // This will discover facets and save them to facets.json
+        FacetDiscovery.discoverAndWrite(name, opts);
+
+        // Load the discovered facets
+        return DesiredFacetsIO.load(name);
     }
 }

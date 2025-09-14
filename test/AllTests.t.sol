@@ -146,7 +146,7 @@ contract AllTests is Test {
         assertEq(m.state.chainId, block.chainid, "chainId mismatch");
         assertEq(m.state.diamond, diamond, "diamond addr mismatch");
 
-        // Manifest should include user facets: AddFacet, ViewFacet
+        // Manifest should include user facets: AddFacet, ViewFacet (auto-discovered)
         // Core facets (Cut, Ownership, Loupe) are not included in manifest
         assertEq(m.state.facets.length, 2, "expected 2 user facets (AddFacet + ViewFacet)");
         // There must be selectors recorded
