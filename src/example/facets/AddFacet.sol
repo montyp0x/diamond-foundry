@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {IAddFacet} from "../../interfaces/counter/IAddFacet.sol";
-import {LibCounterStorage} from "../../libraries/counter/LibCounterStorage.sol";
+import {IAddFacet} from "../interfaces/counter/IAddFacet.sol";
+import {LibCounterStorage} from "../libraries/counter/LibCounterStorage.sol";
 
 /// @title AddFacet (Counter)
 /// @notice Mutating operations for the Counter example (increment/reset).

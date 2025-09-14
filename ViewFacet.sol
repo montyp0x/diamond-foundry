@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {IViewFacet} from "../../interfaces/counter/IViewFacet.sol";
-import {LibCounterStorage} from "../../libraries/counter/LibCounterStorage.sol";
+import {IViewFacet} from "../../src/example/interfaces/counter/IViewFacet.sol";
+import {LibCounterStorage} from "../../src/example/libraries/counter/LibCounterStorage.sol";
 
 /// @title ViewFacet (Counter)
 /// @notice Read-only operations for the Counter example.
