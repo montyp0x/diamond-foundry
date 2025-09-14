@@ -57,15 +57,15 @@ library FacetDiscovery {
         // find "src/<name>/facets" -type f -name "*.sol" (recursive search) - ТОЛЬКО в юзерском проекте
         string memory root = vm.projectRoot();
         string memory srcDirAbs = string.concat(root, "/src/", name, "/facets");
-        
+
         string[] memory cmd = new string[](3);
         cmd[0] = "bash";
         cmd[1] = "-lc";
         cmd[2] = string.concat("find ", _quote(srcDirAbs), " -type f -name '*.sol' || true");
-        
+
         Vm.FfiResult memory r = vm.tryFfi(cmd);
         if (r.exitCode != 0 && r.stdout.length == 0) return new string[](0);
-        
+
         string memory out = string(r.stdout);
         if (bytes(out).length == 0) return new string[](0);
         list = vm.split(out, "\n");
@@ -145,12 +145,12 @@ library FacetDiscovery {
         cmd[0] = "bash";
         cmd[1] = "-lc";
         cmd[2] = string.concat("find ", _quote(dir), " -type f -name '*.json' || true");
-        
+
         Vm.FfiResult memory r = vm.tryFfi(cmd);
         if (r.exitCode != 0 && r.stdout.length == 0) {
             return new string[](0);
         }
-        
+
         string memory outList = string(r.stdout);
         if (bytes(outList).length == 0) {
             return new string[](0);
@@ -195,7 +195,7 @@ library FacetDiscovery {
                 relativeSrc = string(_slice(srcBytes, rootBytes.length + 1, srcBytes.length - rootBytes.length - 1));
             }
         }
-        
+
         // Проверяем, что sourceName начинается с src/<name>/facets/
         string memory srcPrefix = string.concat("src/", _extractProjectName(src), "/facets/");
         if (!relativeSrc.startsWith(srcPrefix)) {
@@ -326,7 +326,7 @@ library FacetDiscovery {
     }
 
     // ── Вспомогательные функции для работы с путями ──────────────────────────────
-    
+
     function _quote(string memory path) private pure returns (string memory) {
         return string.concat('"', path, '"');
     }
@@ -336,34 +336,35 @@ library FacetDiscovery {
         bytes memory srcBytes = bytes(src);
         uint256 start = 0;
         uint256 end = 0;
-        
+
         // Находим начало после "src/"
         for (uint256 i = 0; i < srcBytes.length - 4; i++) {
-            if (srcBytes[i] == 's' && srcBytes[i+1] == 'r' && srcBytes[i+2] == 'c' && srcBytes[i+3] == '/') {
+            if (srcBytes[i] == "s" && srcBytes[i + 1] == "r" && srcBytes[i + 2] == "c" && srcBytes[i + 3] == "/") {
                 start = i + 4;
                 break;
             }
         }
-        
+
         if (start == 0) return "";
-        
+
         // Находим конец перед "/facets/"
         for (uint256 i = start; i < srcBytes.length - 8; i++) {
-            if (srcBytes[i] == '/' && 
-                srcBytes[i+1] == 'f' && srcBytes[i+2] == 'a' && srcBytes[i+3] == 'c' &&
-                srcBytes[i+4] == 'e' && srcBytes[i+5] == 't' && srcBytes[i+6] == 's' && srcBytes[i+7] == '/') {
+            if (
+                srcBytes[i] == "/" && srcBytes[i + 1] == "f" && srcBytes[i + 2] == "a" && srcBytes[i + 3] == "c"
+                    && srcBytes[i + 4] == "e" && srcBytes[i + 5] == "t" && srcBytes[i + 6] == "s" && srcBytes[i + 7] == "/"
+            ) {
                 end = i;
                 break;
             }
         }
-        
+
         if (end == 0) return "";
-        
+
         bytes memory result = new bytes(end - start);
         for (uint256 i = 0; i < result.length; i++) {
             result[i] = srcBytes[start + i];
         }
-        
+
         return string(result);
     }
 }

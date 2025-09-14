@@ -8,7 +8,7 @@ import {Vm} from "forge-std/Vm.sol";
 /// @dev Keeps path conventions in one place. No IO here.
 library Paths {
     Vm internal constant VM = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
-    
+
     /// @notice Root folder for diamond metadata.
     string internal constant ROOT = ".diamond-upgrades/";
 
