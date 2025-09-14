@@ -12,6 +12,7 @@ import {HexUtils} from "../utils/HexUtils.sol";
 /// @notice JSON I/O for `.diamond-upgrades/<name>.manifest.json` (current chain slice only).
 library ManifestIO {
     using stdJson for string;
+    using StringUtils for uint256;
 
     Vm internal constant VM = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
@@ -107,7 +108,7 @@ library ManifestIO {
         // selectors (iterate with try/catch)
         SelectorSnapshot[] memory selectors = new SelectorSnapshot[](0);
         for (uint256 i2 = 0;; i2++) {
-            string memory sb = string.concat(base, ".selectors[", StringUtils.toString(i2), "]");
+            string memory sb = string.concat(base, ".selectors[", i2.toString(), "]");
             bytes32 sel32;
             address facet;
             try VM.parseJsonBytes32(raw, string.concat(sb, ".selector")) returns (bytes32 s32) {
@@ -123,7 +124,7 @@ library ManifestIO {
         // facets (iterate with try/catch)
         FacetSnapshot[] memory facets = new FacetSnapshot[](0);
         for (uint256 f = 0;; f++) {
-            string memory fb = string.concat(base, ".facets[", StringUtils.toString(f), "]");
+            string memory fb = string.concat(base, ".facets[", f.toString(), "]");
             FacetSnapshot memory fs;
             try VM.parseJsonString(raw, string.concat(fb, ".artifact")) returns (string memory artifact) {
                 fs.artifact = artifact;
@@ -137,7 +138,7 @@ library ManifestIO {
             bytes4[] memory fsSelectors = new bytes4[](0);
             for (uint256 j = 0;; j++) {
                 bytes32 b32;
-                try VM.parseJsonBytes32(raw, string.concat(fb, ".selectors[", StringUtils.toString(j), "]")) returns (
+                try VM.parseJsonBytes32(raw, string.concat(fb, ".selectors[", j.toString(), "]")) returns (
                     bytes32 sel32
                 ) {
                     b32 = sel32;

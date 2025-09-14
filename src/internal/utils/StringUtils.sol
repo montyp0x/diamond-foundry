@@ -62,4 +62,68 @@ library StringUtils {
         string[] memory tokens = vm.split(subject, search);
         return tokens.length - 1;
     }
+
+    /// @notice Extract the basename (filename) from a path
+    function basename(string memory p) internal pure returns (string memory) {
+        bytes memory b = bytes(p);
+        int256 last = -1;
+        for (uint256 i = 0; i < b.length; i++) {
+            if (b[i] == "/") last = int256(i);
+        }
+        if (last < 0) return p;
+        uint256 s = uint256(last) + 1;
+        bytes memory out = new bytes(b.length - s);
+        for (uint256 j = 0; j < out.length; j++) {
+            out[j] = b[s + j];
+        }
+        return string(out);
+    }
+
+    /// @notice Remove suffix from string
+    function chopSuffix(string memory s, string memory suf) internal pure returns (string memory) {
+        bytes memory a = bytes(s);
+        bytes memory b = bytes(suf);
+        bytes memory out = new bytes(a.length - b.length);
+        for (uint256 i = 0; i < out.length; i++) {
+            out[i] = a[i];
+        }
+        return string(out);
+    }
+
+    /// @notice Check if two strings are equal
+    function eq(string memory a, string memory b) internal pure returns (bool) {
+        return keccak256(bytes(a)) == keccak256(bytes(b));
+    }
+
+    /// @notice Extract the last token from a line (space-separated)
+    function lastToken(string memory line) internal pure returns (string memory) {
+        bytes memory b = bytes(line);
+        int256 e = int256(b.length) - 1;
+        while (e >= 0 && (b[uint256(e)] == " " || b[uint256(e)] == "\t" || b[uint256(e)] == "\r")) e--;
+        if (e < 0) return "";
+        int256 s = e;
+        while (s >= 0 && b[uint256(s)] != " ") s--;
+        uint256 u = uint256(s + 1);
+        bytes memory out = new bytes(uint256(e) - u + 1);
+        for (uint256 i = 0; i < out.length; i++) {
+            out[i] = b[u + i];
+        }
+        return string(out);
+    }
+
+    /// @notice Slice bytes array
+    function slice(bytes memory b, uint256 off, uint256 len) internal pure returns (bytes memory out) {
+        out = new bytes(len);
+        for (uint256 i = 0; i < len; i++) {
+            out[i] = b[off + i];
+        }
+    }
+
+    /// @notice Grow string array to new size
+    function grow(string[] memory a, uint256 n) internal pure returns (string[] memory b) {
+        b = new string[](n);
+        for (uint256 i = 0; i < a.length; i++) {
+            b[i] = a[i];
+        }
+    }
 }

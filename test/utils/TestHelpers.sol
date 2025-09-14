@@ -3,7 +3,7 @@ pragma solidity ^0.8.24;
 
 import {DesiredFacetsIO} from "src/internal/io/DesiredFacets.sol";
 import {StorageConfigIO} from "src/internal/io/StorageConfig.sol";
-import {FacetDiscovery} from "src/internal/sync/FacetDiscovery.sol";
+import {FacetsPrepare} from "src/internal/sync/FacetPrepare.sol";
 
 /// @title TestHelpers
 /// @notice Common utility functions for diamond upgrade tests
@@ -216,9 +216,8 @@ library TestHelpers {
         internal
         returns (DesiredFacetsIO.DesiredState memory d)
     {
-        // Use the new FacetDiscovery (all options are now constants)
-        // This will discover facets and save them to facets.json
-        FacetDiscovery.discoverAndWrite(name);
+        // Use FacetsPrepare to discover facets and sync selectors
+        FacetsPrepare.ensureAndSync(name);
 
         // Load the discovered facets
         return DesiredFacetsIO.load(name);

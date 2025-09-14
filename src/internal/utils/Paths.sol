@@ -51,4 +51,10 @@ library Paths {
         bool hasSlash = A[A.length - 1] == "/";
         return hasSlash ? string(abi.encodePacked(a, b)) : string(abi.encodePacked(a, "/", b));
     }
+
+    /// @notice Quotes a path for use in shell commands
+    function quote(string memory path) internal pure returns (string memory) {
+        return string.concat('"', path, '"');
+    }
+
 }
