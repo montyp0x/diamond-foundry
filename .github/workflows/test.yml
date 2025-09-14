@@ -34,7 +34,7 @@ jobs:
           forge build --sizes
         id: build
 
-      - name: Run Forge tests
+      - name: Run tests
         run: |
-          bash scripts/run_all_scenarios.sh
+          bash +x scripts/run_all_scenarios.sh
         id: test
