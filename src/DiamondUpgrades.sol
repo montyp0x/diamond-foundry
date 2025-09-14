@@ -2,9 +2,9 @@
 pragma solidity ^0.8.24;
 
 // for compilation only
-import {DiamondCutFacet} from "./facets/DiamondCutFacet.sol";
-import {DiamondLoupeFacet} from "./facets/DiamondLoupeFacet.sol";
-import {OwnershipFacet} from "./facets/OwnershipFacet.sol";
+import {DiamondCutFacet} from "./facets/diamond/DiamondCutFacet.sol";
+import {DiamondLoupeFacet} from "./facets/diamond/DiamondLoupeFacet.sol";
+import {OwnershipFacet} from "./facets/diamond/OwnershipFacet.sol";
 
 import {IDiamondCut} from "./interfaces/diamond/IDiamondCut.sol";
 import {IDiamondLoupe} from "./interfaces/diamond/IDiamondLoupe.sol";
