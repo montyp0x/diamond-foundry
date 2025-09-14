@@ -48,7 +48,8 @@ while IFS= read -r facet_file; do
         cp "$FACETS_DIR/$facet_file" "$EXAMPLE_FACETS_DIR/"
         
         # Fix import paths for src/example/facets location
-        sed -i '' 's|../../src/example/|../|g' "$EXAMPLE_FACETS_DIR/$facet_file"
+        # Use portable sed approach that works on both macOS and Linux
+        sed 's|../../src/example/|../|g' "$EXAMPLE_FACETS_DIR/$facet_file" > "$EXAMPLE_FACETS_DIR/$facet_file.tmp" && mv "$EXAMPLE_FACETS_DIR/$facet_file.tmp" "$EXAMPLE_FACETS_DIR/$facet_file"
     else
         echo "  Warning: $facet_file not found in $FACETS_DIR"
     fi
