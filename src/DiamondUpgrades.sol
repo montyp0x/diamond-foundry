@@ -335,8 +335,8 @@ library DiamondUpgrades {
 
     function _shouldPersist(address deployed) internal view returns (bool) {
         bool isBroadcast = false;
-        try VM.isContext(VmSafe.ForgeContext.ScriptBroadcast) returns (bool b) {
-            isBroadcast = b;
+        try VM.isContext(VmSafe.ForgeContext.ScriptDryRun) returns (bool b) {
+            isBroadcast = !b;
         } catch {}
 
         if (isBroadcast) {
