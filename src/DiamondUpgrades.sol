@@ -8,7 +8,7 @@ import {OwnershipFacet} from "./facets/diamond/OwnershipFacet.sol";
 
 import {IDiamondCut} from "./interfaces/diamond/IDiamondCut.sol";
 import {IDiamondLoupe} from "./interfaces/diamond/IDiamondLoupe.sol";
-import {Vm} from "forge-std/Vm.sol";
+import {Vm, VmSafe} from "forge-std/Vm.sol";
 
 // internal libs (IO)
 import {ManifestIO} from "./internal/io/Manifest.sol";
@@ -202,7 +202,9 @@ library DiamondUpgrades {
         }
 
         manifest.state.stateHash = ManifestIO.computeStateHash(manifest.state);
-        ManifestIO.save(manifest);
+        if (_shouldPersist(diamond)) {
+            ManifestIO.save(manifest);
+        }
 
         emit Deployed(name, diamond);
     }
@@ -254,7 +256,9 @@ library DiamondUpgrades {
         r.manifestNext.state.history = newHist;
         r.manifestNext.state.stateHash = ManifestIO.computeStateHash(r.manifestNext.state);
 
-        ManifestIO.save(r.manifestNext);
+        if (_shouldPersist(diamond)) {
+            ManifestIO.save(r.manifestNext);
+        }
         emit Upgraded(name, diamond, r.manifestNext.state.stateHash);
     }
 
@@ -327,5 +331,19 @@ library DiamondUpgrades {
         // Create project-specific directory
         string memory projectDir = string(abi.encodePacked(".diamond-upgrades/", name));
         try VM.createDir(projectDir, true) {} catch {}
+    }
+
+    function _shouldPersist(address deployed) internal view returns (bool) {
+        bool isBroadcast = false;
+        try VM.isContext(VmSafe.ForgeContext.ScriptBroadcast) returns (bool b) {
+            isBroadcast = b;
+        } catch {}
+
+        if (isBroadcast) {
+            require(deployed.code.length != 0, "not on-chain (dry-run?)");
+            return true;
+        }
+
+        return false;
     }
 }
