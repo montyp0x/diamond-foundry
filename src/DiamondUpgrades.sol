@@ -18,6 +18,7 @@ import {StorageConfigIO} from "./internal/io/StorageConfig.sol";
 // planning + execution
 import {CutPlanner} from "./internal/plan/CutPlanner.sol";
 import {PlanBuilder} from "./internal/upgrade/PlanBuilder.sol";
+import {SelectorCheck} from "./internal/validate/SelectorCheck.sol";
 import {PlanExecutor} from "./internal/upgrade/PlanExecutor.sol";
 import {UpgradeRunner} from "./internal/upgrade/UpgradeRunner.sol"; // still used for upgrade()
 import {NamespacePolicy} from "./internal/validate/NamespacePolicy.sol";
@@ -151,7 +152,11 @@ library DiamondUpgrades {
         current.history = new ManifestIO.HistoryEntry[](0);
         current.stateHash = bytes32(0);
 
-        // 4) Resolve targets (deploy facets) → plan → execute
+        // 4) Check for selector collisions before deploying facets
+        SelectorCheck.FacetInput[] memory fin = _toFacetInputs(desiredPlus);
+        SelectorCheck.ensureNoCollisions(fin);
+
+        // 5) Resolve targets (deploy facets) → plan → execute
         FacetDeployer.Result memory res = FacetDeployer.resolveTargets(
             desiredPlus,
             current,
@@ -343,5 +348,21 @@ library DiamondUpgrades {
         }
 
         return false;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Helper functions
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    function _toFacetInputs(DesiredFacetsIO.DesiredState memory d)
+        private
+        pure
+        returns (SelectorCheck.FacetInput[] memory out)
+    {
+        out = new SelectorCheck.FacetInput[](d.facets.length);
+        for (uint256 i = 0; i < d.facets.length; i++) {
+            out[i].artifact = d.facets[i].artifact;
+            out[i].selectors = d.facets[i].selectors;
+        }
     }
 }

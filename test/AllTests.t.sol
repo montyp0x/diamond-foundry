@@ -21,57 +21,40 @@ import {LibCounterStorage} from "src/example/libraries/counter/LibCounterStorage
 import {IDiamondLoupe} from "src/interfaces/diamond/IDiamondLoupe.sol";
 import {IERC173} from "src/interfaces/diamond/IERC173.sol";
 
-// ─── Local fixtures (compiled вместе с тестом) ─────────────────────────────────
-
-// PlusOneFacet теперь в src/example/facets/test/PlusOneFacet.sol
-
-// AddFacetV2 теперь в src/example/facets/test/AddFacetV2.sol
-
-// EvilFacet теперь в src/example/facets/test/EvilFacet.sol
-
-// BadCollisionFacet теперь в src/example/facets/test/BadCollisionFacet.sol
-
-// InitFacet теперь в src/example/facets/test/InitFacet.sol
-
-// ─── Small interfaces для фикстур ──────────────────────────────────────────────
+// ─── Small interfaces ──────────────────────────────────────────────
 interface IPlusOne {
     function plusOne() external returns (uint256);
 }
 
 interface IAddFacetV2 is IAddFacet {}
 
-// ─── Единый тестовый контракт со всеми тестами ────────────────────────────────
 contract AllTests is Test {
-    // Константы для разных тестовых сценариев
     string internal constant NAME_EXAMPLE = "example";
 
     address internal owner = address(this);
     address internal diamond;
 
-    // Базовые артефакты из примера
     string internal constant ART_ADD = "AddFacet.sol:AddFacet";
     string internal constant ART_VIEW = "ViewFacet.sol:ViewFacet";
     string internal constant NS_ID = "counter.v1";
     string internal constant LIB_ART = "LibCounterStorage.sol:LibCounterStorage";
     string internal constant LIB_NAME = "LibCounterStorage";
 
-    // Тестовые артефакты (из src/example/facets/test/)
+    // (src/example/facets/test/)
     string internal constant ART_PLUS1 = "test/PlusOneFacet.sol:PlusOneFacet";
     string internal constant ART_ADDV2 = "test/AddFacetV2.sol:AddFacetV2";
     string internal constant ART_EVIL = "test/EvilFacet.sol:EvilFacet";
-    string internal constant ART_BAD = "_test/BadCollisionFacet.sol:BadCollisionFacet";
+    string internal constant ART_BAD = "test/facets/BadCollisionFacet.sol:BadCollisionFacet";
     string internal constant ART_INIT = "test/InitFacet.sol:InitFacet";
 
     function setUp() public {
-        // Очищаем тестовый проект
         _cleanupProject(NAME_EXAMPLE);
 
-        // Создаем базовую структуру каталогов
         vm.createDir(".diamond-upgrades", true);
         vm.createDir(string(abi.encodePacked(".diamond-upgrades/", NAME_EXAMPLE)), true);
     }
 
-    // ─── Базовые тесты из ExampleCounter.t.sol ────────────────────────────────
+    // ─── Basic tests from ExampleCounter.t.sol ────────────────────────────────
 
     function testCounterFlow() public {
         _cleanupProject(NAME_EXAMPLE);
@@ -110,94 +93,94 @@ contract AllTests is Test {
         assertTrue(m.state.stateHash != bytes32(0), "stateHash not set");
     }
 
-    // ─── Полный жизненный цикл из FullFlow.t.sol ──────────────────────────────
+    // ─── Full lifecycle from FullFlow.t.sol ──────────────────────────────
 
     function test_FullDiamondLifecycle() public {
         _cleanupProject(NAME_EXAMPLE);
         _setupExampleProject();
 
-        // ═══ ФАЗА 1: Добавление новой функциональности (PlusOneFacet) ═══
+        // ═══ PHASE 1: Adding new functionality (PlusOneFacet) ═══
         console.log("=== PHASE 1: Adding new functionality (PlusOneFacet) ===");
 
-        // Создаем новое состояние с PlusOneFacet (автоматически + локальный фасет)
+        // Create new state with PlusOneFacet (automatically + local facet)
         DesiredFacetsIO.DesiredState memory d1 = DesiredFacetsIO.load(NAME_EXAMPLE);
         d1.facets = TestHelpers.appendFacet(d1.facets, TestHelpers.createFacetWithNamespace(ART_PLUS1, NS_ID));
         DesiredFacetsIO.save(d1);
 
-        // Обновление (автоматически включает синк селекторов)
+        // Update (automatically includes selector sync)
         address daddr = DiamondUpgrades.upgrade(NAME_EXAMPLE);
         assertEq(daddr, diamond, "diamond address changed unexpectedly in phase 1");
 
-        // Проверяем новую функциональность
+        // Check new functionality
         assertEq(IViewFacet(diamond).get(), 0, "counter should start at 0");
         uint256 after1 = IPlusOne(diamond).plusOne();
         assertEq(after1, 1, "plusOne after 0 must be 1");
         assertEq(IViewFacet(diamond).get(), 1, "view mismatch after plusOne");
         console.log("[OK] Phase 1 complete: PlusOneFacet added and working");
 
-        // ═══ ФАЗА 2: Обновление существующей функциональности (AddFacet -> AddFacetV2) ═══
+        // ═══ PHASE 2: Upgrading existing functionality (AddFacet -> AddFacetV2) ═══
         console.log("=== PHASE 2: Upgrading existing functionality (AddFacet -> AddFacetV2) ===");
 
-        // Сброс счетчика для чистого тестирования
+        // Reset counter for clean testing
         IAddFacet(diamond).reset();
 
-        // Загружаем текущее состояние и заменяем артефакт
+        // Load current state and replace artifact
         DesiredFacetsIO.DesiredState memory d2 = DesiredFacetsIO.load(NAME_EXAMPLE);
         (bool ok, uint256 idx) = DesiredFacetsIO.findFacet(d2, ART_ADD);
         assertTrue(ok, "AddFacet not found in desired facets");
 
-        // Удаляем старый фасет и добавляем новый
+        // Remove old facet and add new one
         d2.facets = TestHelpers.removeFacetAt(d2.facets, idx);
         d2.facets = TestHelpers.appendFacet(d2.facets, TestHelpers.createFacetWithNamespace(ART_ADDV2, NS_ID));
 
         DesiredFacetsIO.save(d2);
 
-        // Проверяем, что артефакт действительно заменился
+        // Verify that artifact was actually replaced
         DesiredFacetsIO.DesiredState memory d2AfterSync = DesiredFacetsIO.load(NAME_EXAMPLE);
         (bool okAfter,) = DesiredFacetsIO.findFacet(d2AfterSync, ART_ADDV2);
         assertTrue(okAfter, "AddFacetV2 not found after sync");
         (bool oldExists,) = DesiredFacetsIO.findFacet(d2AfterSync, ART_ADD);
         assertFalse(oldExists, "Old AddFacet should not exist after replacement");
 
-        // Апгрейд
+        // Upgrade
         DiamondUpgrades.upgrade(NAME_EXAMPLE);
 
-        // Проверяем новое поведение: increment(by) теперь += (by+1)
+        // Check new behavior: increment(by) now += (by+1)
         assertEq(IViewFacet(diamond).get(), 0, "counter should be reset");
-        IAddFacetV2(diamond).increment(5); // Ожидание: 6 (5 + 1)
+        IAddFacetV2(diamond).increment(5); // Expected: 6 (5 + 1)
         assertEq(IViewFacet(diamond).get(), 6, "v2 increment mismatch");
         IAddFacetV2(diamond).reset();
         assertEq(IViewFacet(diamond).get(), 0, "reset after v2 failed");
         console.log("[OK] Phase 2 complete: AddFacet replaced with AddFacetV2");
 
-        // ═══ ФАЗА 3: Удаление всей пользовательской функциональности ═══
+        // ═══ PHASE 3: Removing all user functionality ═══
         console.log("=== PHASE 3: Removing all user facets ===");
 
-        // Удаляем все пользовательские фасеты
+        // Remove all user facets
         DesiredFacetsIO.DesiredState memory d3 = DesiredFacetsIO.load(NAME_EXAMPLE);
         console.log("Facets before removal:", d3.facets.length);
-        d3.facets = new DesiredFacetsIO.Facet[](0); // Очищаем все пользовательские фасеты
+        d3.facets = new DesiredFacetsIO.Facet[](0); // Clear all user facets
         DesiredFacetsIO.save(d3);
 
         address diamondAddr = DiamondUpgrades.upgrade(NAME_EXAMPLE);
         assertEq(diamondAddr, diamond, "diamond address changed in phase 3");
 
-        // Проверяем, что пользовательские селекторы удалены
-        vm.expectRevert(); // increment больше не доступен
+        // Check that user selectors are removed
+        vm.expectRevert(); // increment no longer available
         IAddFacet(diamond).increment(1);
 
-        vm.expectRevert(); // get больше не доступен
+        vm.expectRevert(); // get no longer available
         IViewFacet(diamond).get();
 
-        vm.expectRevert(); // plusOne больше не доступен
+        vm.expectRevert(); // plusOne no longer available
         IPlusOne(diamond).plusOne();
 
-        // Но core селекторы должны остаться
+        // But core selectors should remain
         IDiamondLoupe.Facet[] memory facets = IDiamondLoupe(diamond).facets();
         assertGe(facets.length, 1, "core facets should remain");
         console.log("[OK] Phase 3 complete: All user facets removed, core facets remain");
 
-        // Проверим, какие фасеты реально есть в Diamond через DiamondLoupe
+        // Check which facets are actually in Diamond via DiamondLoupe
         IDiamondLoupe.Facet[] memory actualFacets = IDiamondLoupe(diamond).facets();
         console.log("=== Actual facets in Diamond (via DiamondLoupe) ===");
         console.log("Total facets in Diamond:", actualFacets.length);
@@ -206,23 +189,23 @@ contract AllTests is Test {
             console.log("  Selectors count:", actualFacets[i].functionSelectors.length);
         }
 
-        // Проверим, что OwnershipFacet работает
+        // Check that OwnershipFacet works
         IERC173 ownershipFacet = IERC173(diamond);
         address currentOwner = ownershipFacet.owner();
         assertEq(currentOwner, owner, "Owner should be set correctly");
         console.log("Diamond owner:", vm.toString(currentOwner));
 
-        // ═══ ФАЗА 4: Обработка ошибочной конфигурации ═══
+        // ═══ PHASE 4: Error configuration handling ═══
         console.log("=== PHASE 4: Error handling - invalid namespace ===");
 
-        // Попытка добавить фасет с несуществующим namespace
+        // Attempt to add facet with non-existent namespace
         DesiredFacetsIO.DesiredState memory d4 = DesiredFacetsIO.load(NAME_EXAMPLE);
         d4.facets = TestHelpers.appendFacet(d4.facets, TestHelpers.createFacetWithNamespace(ART_EVIL, "ghost.v1"));
         DesiredFacetsIO.save(d4);
 
-        // Этот upgrade должен завершиться ошибкой
-        // (Мы не можем легко протестировать конкретную ошибку с vm.expectRevert из-за internal calls)
-        // Но важно, что система корректно обрабатывает ошибки
+        // This upgrade should fail
+        // (We cannot easily test specific error with vm.expectRevert due to internal calls)
+        // But it is important that the system correctly handles errors
         console.log("[OK] Phase 4: Error handling tested (namespace validation works)");
 
         console.log("=== FULL LIFECYCLE TEST COMPLETE ===");
@@ -232,7 +215,7 @@ contract AllTests is Test {
         _cleanupProject(NAME_EXAMPLE);
         _setupExampleProject();
 
-        // После деплоя должен быть создан корректный манифест
+        // After deployment, a correct manifest should be created
         ManifestIO.Manifest memory m = ManifestIO.load(NAME_EXAMPLE);
         assertEq(m.name, NAME_EXAMPLE, "manifest name mismatch");
         assertTrue(m.state.diamond != address(0), "diamond address not set in manifest");
@@ -242,7 +225,7 @@ contract AllTests is Test {
         console.log("[OK] Manifest consistency validated");
     }
 
-    // ─── Продвинутые сценарии из AdvancedScenarios.t.sol ──────────────────────
+    // ─── Advanced scenarios from AdvancedScenarios.t.sol ──────────────────────
 
     function test_RemoveNonCoreFacet() public {
         _cleanupProject(NAME_EXAMPLE);
@@ -275,9 +258,17 @@ contract AllTests is Test {
 
         // add BadCollisionFacet with same selector increment(uint256)
         DesiredFacetsIO.DesiredState memory d = DesiredFacetsIO.load(NAME_EXAMPLE);
-        d.facets = TestHelpers.appendFacet(d.facets, TestHelpers.createFacetWithNamespace(ART_BAD, NS_ID));
+
+        // Create BadCollisionFacet with the same selector as AddFacet.increment(uint256)
+        DesiredFacetsIO.Facet memory badFacet =
+            DesiredFacetsIO.Facet({artifact: ART_BAD, selectors: new bytes4[](1), uses: TestHelpers.one(NS_ID)});
+        // Set the selector for increment(uint256) - same as AddFacet
+        badFacet.selectors[0] = bytes4(keccak256("increment(uint256)"));
+
+        d.facets = TestHelpers.appendFacet(d.facets, badFacet);
         DesiredFacetsIO.save(d);
-        // ожидаем revert в нашей валидации (SelectorCollision)
+
+        // expect revert in our validation (SelectorCollision)
         vm.expectRevert();
         DiamondUpgrades.upgrade(NAME_EXAMPLE);
     }
@@ -295,7 +286,7 @@ contract AllTests is Test {
         ManifestIO.Manifest memory m1 = ManifestIO.load(NAME_EXAMPLE);
         // our manifest contains only user facets (Add, View); count should remain 2 on noop
         assertEq(m0.state.facets.length, m1.state.facets.length, "facet count changed unexpectedly");
-        // проверим, что адреса фасетов по artifact не изменились
+        // check that facet addresses by artifact have not changed
         for (uint256 i = 0; i < m0.state.facets.length; i++) {
             (bool ok0, uint256 idx0) = ManifestIO.findFacetByArtifact(m0.state, m0.state.facets[i].artifact);
             (bool ok1, uint256 idx1) = ManifestIO.findFacetByArtifact(m1.state, m0.state.facets[i].artifact);
@@ -338,7 +329,7 @@ contract AllTests is Test {
         );
         assertTrue(diamond != address(0), "diamond not deployed");
 
-        // Базовые sanity-проверки
+        // Basic sanity checks
         assertEq(IViewFacet(diamond).get(), 0, "initial != 0");
         IAddFacet(diamond).increment(5);
         assertEq(IViewFacet(diamond).get(), 5, "increment(5) failed");
@@ -566,29 +557,16 @@ contract AllTests is Test {
         _cleanupProject(NAME_EXAMPLE);
         _setupExampleProject();
 
-        // Add EvilCoreFacet that attempts to implement core functions
+        // Test: Verify that facets with core selectors are blocked
         DesiredFacetsIO.DesiredState memory d = DesiredFacetsIO.load(NAME_EXAMPLE);
         d.facets = TestHelpers.appendFacet(d.facets, TestHelpers.createFacetWithNamespace("EvilCoreFacet", NS_ID));
         DesiredFacetsIO.save(d);
 
-        // Deploy - this should succeed because core protection prevents core functions from being added
+        // This should fail because EvilCoreFacet contains core selectors
+        vm.expectRevert(abi.encodeWithSelector(Errors.CoreSelectorProtected.selector, bytes4(0x1f931c1c))); // diamondCut selector
         DiamondUpgrades.upgrade(NAME_EXAMPLE);
-        ManifestIO.Manifest memory m = ManifestIO.load(NAME_EXAMPLE);
 
-        // Verify that the evil facet was added but core functions are not accessible
-        assertTrue(m.state.facets.length >= 3, "Should have at least 3 facets (Add, View, EvilCore)");
-        
-        // Verify that legitimate function works
-        address diamond = m.state.diamond;
-        (bool success, bytes memory data) = diamond.call(abi.encodeWithSignature("legitimateFunction()"));
-        assertTrue(success, "Legitimate function should work");
-        assertEq(string(data), "This function should be allowed", "Legitimate function should return correct value");
-
-        // Verify that core functions are not accessible (they should revert)
-        (success, ) = diamond.call(abi.encodeWithSignature("diamondCut(bytes[],address,bytes)"));
-        assertFalse(success, "Core function diamondCut should not be accessible from EvilCoreFacet");
-
-        console.log("[OK] Core protection test passed: malicious core functions are blocked");
+        console.log("[OK] Core protection test passed: core selectors are protected from being added");
     }
 
     function test_17_overloads_same_names() public {

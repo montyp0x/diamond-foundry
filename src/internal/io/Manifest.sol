@@ -225,7 +225,7 @@ library ManifestIO {
             "}"
         );
 
-        // Note: Используем light pretty formatting для избежания OOG на больших манифестах
+        // Note: Using light pretty formatting to avoid OOG on large manifests
         VM.writeFile(path, json);
     }
 

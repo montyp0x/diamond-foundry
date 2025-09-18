@@ -17,7 +17,6 @@ import {IAddFacet} from "src/example/interfaces/counter/IAddFacet.sol";
 import {IViewFacet} from "src/example/interfaces/counter/IViewFacet.sol";
 import {IDiamondLoupe} from "src/interfaces/diamond/IDiamondLoupe.sol";
 
-
 // Test interfaces for additional facets
 interface IPlusOne {
     function plusOne() external returns (uint256);
