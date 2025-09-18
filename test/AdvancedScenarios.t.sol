@@ -12,12 +12,10 @@ import {FacetsPrepare} from "src/internal/sync/FacetPrepare.sol";
 import {DesiredFacetsIO} from "src/internal/io/DesiredFacets.sol";
 import {StorageInit} from "src/internal/sync/StorageInit.sol";
 import {ManifestIO} from "src/internal/io/Manifest.sol";
-import {TestHelpers} from "test/utils/TestHelpers.sol";
 
 // Example interfaces & storage
 import {IAddFacet} from "src/example/interfaces/counter/IAddFacet.sol";
 import {IViewFacet} from "src/example/interfaces/counter/IViewFacet.sol";
-import {LibCounterStorage} from "src/example/libraries/counter/LibCounterStorage.sol";
 import {IDiamondLoupe} from "src/interfaces/diamond/IDiamondLoupe.sol";
 import {IERC173} from "src/interfaces/diamond/IERC173.sol";
 

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {Vm} from "forge-std/Vm.sol";
+import {DeployUtils} from "../utils/DeployUtils.sol";
 import {IDiamondLoupe} from "../../interfaces/diamond/IDiamondLoupe.sol";
 import {IERC173} from "../../interfaces/diamond/IERC173.sol";
 import {IDiamondCut} from "../../interfaces/diamond/IDiamondCut.sol";
@@ -32,9 +33,9 @@ library DiamondDeployer {
     /// @notice Deploy all core facets (Cut, Ownership, Loupe) and Diamond with the standard EIP-2535 constructor.
     function deployCore(address owner) internal returns (Core memory c) {
         // 1) Deploy all core facets
-        address cut = VM.deployCode(ARTIFACT_DIAMOND_CUT_FACET);
-        address ownership = VM.deployCode(ARTIFACT_OWNERSHIP_FACET);
-        address loupe = VM.deployCode(ARTIFACT_DIAMOND_LOUPE);
+        address cut = DeployUtils.deploy(ARTIFACT_DIAMOND_CUT_FACET, "");
+        address ownership = DeployUtils.deploy(ARTIFACT_OWNERSHIP_FACET, "");
+        address loupe = DeployUtils.deploy(ARTIFACT_DIAMOND_LOUPE, "");
 
         // 2) Prepare FacetCuts for all core facets (they need to be added during deployment)
         IDiamond.FacetCut[] memory diamondCut = new IDiamond.FacetCut[](3);
@@ -63,7 +64,7 @@ library DiamondDeployer {
 
         // 4) Deploy Diamond with proper EIP-2535 constructor
         bytes memory ctor = abi.encode(diamondCut, args);
-        address diamond = VM.deployCode(ARTIFACT_DIAMOND, ctor);
+        address diamond = DeployUtils.deploy(ARTIFACT_DIAMOND, ctor);
 
         c.diamond = diamond;
         c.cutFacet = cut;
@@ -73,7 +74,7 @@ library DiamondDeployer {
 
     /// @notice Deploy the loupe facet (no constructors assumed).
     function deployLoupeFacet() internal returns (address loupe) {
-        loupe = VM.deployCode(ARTIFACT_DIAMOND_LOUPE);
+        loupe = DeployUtils.deploy(ARTIFACT_DIAMOND_LOUPE, "");
     }
 
     /// @notice Canonical selectors for the IDiamondLoupe interface.

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {Vm} from "forge-std/Vm.sol";
+import {DeployUtils} from "../utils/DeployUtils.sol";
 import {ManifestIO} from "../io/Manifest.sol";
 import {DesiredFacetsIO} from "../io/DesiredFacets.sol";
 import {CutPlanner} from "../plan/CutPlanner.sol";
@@ -60,12 +61,12 @@ library FacetDeployer {
 
             // 3) if not cached and allowed, deploy now
             if (facet == address(0) && deploy) {
-                // NB: facets should not have constructors; if they do, use the overloaded deployCode with args.
-                facet = VM.deployCode(artifact);
+                // NB: facets should not have constructors; if they do, use the overloaded deploy with args.
+                facet = DeployUtils.deploy(artifact, "");
                 if (facet == address(0)) {
                     string memory base = _basename(artifact);
                     if (!_eq(base, artifact)) {
-                        facet = VM.deployCode(base);
+                        facet = DeployUtils.deploy(base, "");
                     }
                 }
                 if (facet == address(0)) revert Errors.InvalidArtifact(artifact);

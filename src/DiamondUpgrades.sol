@@ -202,9 +202,8 @@ library DiamondUpgrades {
         }
 
         manifest.state.stateHash = ManifestIO.computeStateHash(manifest.state);
-        if (_shouldPersist(diamond)) {
-            ManifestIO.save(manifest);
-        }
+
+        ManifestIO.save(manifest);
 
         emit Deployed(name, diamond);
     }
@@ -256,9 +255,8 @@ library DiamondUpgrades {
         r.manifestNext.state.history = newHist;
         r.manifestNext.state.stateHash = ManifestIO.computeStateHash(r.manifestNext.state);
 
-        if (_shouldPersist(diamond)) {
-            ManifestIO.save(r.manifestNext);
-        }
+        ManifestIO.save(r.manifestNext);
+
         emit Upgraded(name, diamond, r.manifestNext.state.stateHash);
     }
 

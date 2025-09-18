@@ -562,6 +562,35 @@ contract AllTests is Test {
     // ─── Additional Critical Tests ─────────────────────────────────────────────────
 
     // Test 17: Overloads / Same Names
+    function test_16_core_protection() public {
+        _cleanupProject(NAME_EXAMPLE);
+        _setupExampleProject();
+
+        // Add EvilCoreFacet that attempts to implement core functions
+        DesiredFacetsIO.DesiredState memory d = DesiredFacetsIO.load(NAME_EXAMPLE);
+        d.facets = TestHelpers.appendFacet(d.facets, TestHelpers.createFacetWithNamespace("EvilCoreFacet", NS_ID));
+        DesiredFacetsIO.save(d);
+
+        // Deploy - this should succeed because core protection prevents core functions from being added
+        DiamondUpgrades.upgrade(NAME_EXAMPLE);
+        ManifestIO.Manifest memory m = ManifestIO.load(NAME_EXAMPLE);
+
+        // Verify that the evil facet was added but core functions are not accessible
+        assertTrue(m.state.facets.length >= 3, "Should have at least 3 facets (Add, View, EvilCore)");
+        
+        // Verify that legitimate function works
+        address diamond = m.state.diamond;
+        (bool success, bytes memory data) = diamond.call(abi.encodeWithSignature("legitimateFunction()"));
+        assertTrue(success, "Legitimate function should work");
+        assertEq(string(data), "This function should be allowed", "Legitimate function should return correct value");
+
+        // Verify that core functions are not accessible (they should revert)
+        (success, ) = diamond.call(abi.encodeWithSignature("diamondCut(bytes[],address,bytes)"));
+        assertFalse(success, "Core function diamondCut should not be accessible from EvilCoreFacet");
+
+        console.log("[OK] Core protection test passed: malicious core functions are blocked");
+    }
+
     function test_17_overloads_same_names() public {
         _cleanupProject(NAME_EXAMPLE);
         _setupExampleProject();

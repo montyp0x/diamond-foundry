@@ -25,6 +25,7 @@ scenarios=(
     "13_init_override.txt:test_13_init_spec_override"
     "14_init_revert.txt:test_14_init_revert_atomicity"
     "15_replace_hash.txt:test_15_replace_runtime_hash"
+    "16_core_protection.txt:test_16_core_protection"
     "17_overloads.txt:test_17_overloads_same_names"
     "18_fallback_ignore.txt:test_18_fallback_receive_ignore"
     "19_events_ignore.txt:test_19_events_constructor_ignore"
